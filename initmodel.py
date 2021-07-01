@@ -46,13 +46,13 @@ def get_model( paras ):
     if modelname == "TRN":
         paras.log.log("init model, model name:" + modelname )
 
-        num_segments = 8
-        modality = "RGB"
-        arch     = "BNInception"
-        consensus_type = 'TRNmultiscale'
-        dropout  = 0.8
+        num_segments    = 8
+        modality        = "RGB"
+        arch            = "BNInception"
+        consensus_type  = 'TRNmultiscale'
+        dropout         = 0.8
         img_feature_dim = 256
-        no_partialbn = False
+        no_partialbn    = False
         model = TSN(num_class, num_segments, modality,
                     base_model= arch,
                     consensus_type= consensus_type,
@@ -75,6 +75,9 @@ def get_model( paras ):
     if paras.usegpu:
         model = torch.nn.DataParallel(model, device_ids=range(torch.cuda.device_count())).cuda()
 
+
+    paras.model = model
+
     return model
 
 
@@ -85,6 +88,6 @@ if __name__ == "__main__":
 
     myparas = paras()
 
-    model = get_model( myparas)
+    model   = get_model( myparas )
 
     print("end")
