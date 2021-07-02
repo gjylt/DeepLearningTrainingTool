@@ -1,3 +1,3 @@
-2021-06-30 18:53:39 -> gpunum:1
-2021-06-30 18:53:39 -> init model, model name:TRN
-2021-06-30 18:53:43 -> load model:/home/withai/Desktop/trn_test/LC6Best_20210507.tar success!
+2021-07-02 18:38:11 -> gpunum:1
+2021-07-02 18:38:11 -> init model, model name:TRN
+2021-07-02 18:39:34 -> load model:/home/withai/Desktop/LCLabelFiles/action_len24_fps8_pg_bg.csv_LC10_best.pth.tar success!

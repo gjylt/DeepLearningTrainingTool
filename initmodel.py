@@ -1,8 +1,9 @@
-from model.TRN.models import TSN
+from   model.TRN.models import TSN
 import torch
 import os
-from tool import log
-
+from   torch.optim import SGD
+import copy
+from   initDataloader import get_dataloader
 
 def load_checkpoint( model, checkpoint, optimizer = None ):
     if os.path.exists(checkpoint) :
@@ -31,20 +32,57 @@ def load_checkpoint( model, checkpoint, optimizer = None ):
     else:
         return model
 
-def get_model( paras ):
-    modelname   = paras.modelname
-    num_class   = paras.num_class
-    modelresume = paras.modelresume
+
+class trn_loss():
+    def __init__(self, paras):
+
+        self.metric = {
+            "num":0
+        }
+        self.crossentropy =  torch.nn.CrossEntropyLoss()
+        if paras.usegpu:
+            self.crossentropy.cuda()
+
+
+    def model_choice_metric(self, ):
+        metric = copy.deepcopy( self.metric )
+        metric["model_choice"] = metric["average_loss"]/metric["num"]
+        return metric
+
+    def calcloss(self, input, target):
+
+        self.metric["num"] += input.shape(0)
+
+        loss = self.crossentropy( input, target )
+        self.metric["loss"] = loss
+        if "average_loss" not in self.metric.keys():
+            self.metric["average_loss"] = 0
+        self.metric["average_loss"] += loss
+
+        acc = torch.sum( input == target )
+        self.metric["acc"] = acc
+        if "average_acc" not in self.metric.keys():
+            self.metric["average_acc"] = 0
+        self.metric["average_acc"] += loss
+
+        return self.metric
+
+
+
+def get_model( sysparas ):
+    modelname   = sysparas.modelname
+    num_class   = sysparas.num_class
+    modelresume = sysparas.modelresume
 
     gpunum      = torch.cuda.device_count()
-    paras.log.log("gpunum:" + str(gpunum) )
+    sysparas.log.log("gpunum:" + str(gpunum) )
     if gpunum > 0:
-        paras.usegpu = True
+        sysparas.usegpu = True
 
     model = None
     #init model
     if modelname == "TRN":
-        paras.log.log("init model, model name:" + modelname )
+        sysparas.log.log("init model, model name:" + modelname )
 
         num_segments    = 8
         modality        = "RGB"
@@ -53,32 +91,48 @@ def get_model( paras ):
         dropout         = 0.8
         img_feature_dim = 256
         no_partialbn    = False
-        model = TSN(num_class, num_segments, modality,
+        sysparas.model     = TSN(num_class, num_segments, modality,
                     base_model= arch,
                     consensus_type= consensus_type,
                     dropout= dropout,
                     img_feature_dim=img_feature_dim,
                     partial_bn=not no_partialbn)
 
+        sysparas = get_dataloader(sysparas)
+
+        # init optimizer
+        if len(sysparas.learning_rate_policy.keys()) > 0:
+            policies = sysparas.learning_rate_policy
+        else:
+            policies = sysparas.model.parameters()
+
+        sysparas.optimizer = SGD(policies,
+                                 sysparas.learning_rate,
+                                 momentum=sysparas.momentum,
+                                 weight_decay=sysparas.weight_decay
+                                 )
+
+        # init criterion
+        sysparas.criterion = trn_loss(sysparas)
+
+
     #load pretrain parameters
     if os.path.exists(modelresume):
         try:
-            model = load_checkpoint(model, modelresume)
-
-            paras.log.log( "load model:" + modelresume + " success!" )
+            sysparas.model = load_checkpoint(sysparas.model, modelresume)
+            sysparas.log.log( "load model:" + modelresume + " success!" )
         except:
-            paras.log.log( "load model failed!!!" )
+            sysparas.log.log( "load model failed!!!" )
     else:
-        paras.log.log("jump load model file")
+        sysparas.log.log("jump load model file")
 
     #use gpu
-    if paras.usegpu:
-        model = torch.nn.DataParallel(model, device_ids=range(torch.cuda.device_count())).cuda()
+    if sysparas.usegpu:
+        sysparas.model = torch.nn.DataParallel( sysparas.model, device_ids=range(torch.cuda.device_count())).cuda()
 
 
-    paras.model = model
 
-    return model
+    return sysparas
 
 
 
