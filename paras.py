@@ -1,4 +1,5 @@
 from tool.log import loger
+from tool.parse_config import get_config
 
 class paras():
 

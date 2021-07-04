@@ -163,8 +163,6 @@ from tool.parse_config import get_config
 
 if __name__ == "__main__":
 
-
-
     access_key  = get_config("access_key")
     secret_key  = get_config("secret_key")
     region      = get_config("region")
@@ -198,32 +196,5 @@ if __name__ == "__main__":
             except:
                 print(localpth,s3pth)
 
-
-    # if not os.path.exists(localdir):
-    #     os.makedirs(localdir)
-    #
-    # try:
-    #     filist = awsdata.LoadDirsFromS3(s3dir, localdir)
-    # except:
-    #     print("list failed!")
-
-    # for dirpth in dirlist:
-    #
-    #     s3dir = os.path.join( "腹腔镜胆囊/CSR", dirpth )
-    #     localdir1 = os.path.join( localdir, dirpth)
-    #
-    #     #打印指定目录视频文件列表
-    #     # filelsit = awsdata.list_file(s3dir)
-    #     # for fi in filelsit:
-    #     #     print(fi.key)
-    #
-    #     # localdir   = os.path.join(savedir, s3dir.split("/")[-1] )
-    #     if not os.path.exists(localdir1):
-    #         os.makedirs(localdir1)
-    #
-    #     try:
-    #         filist = awsdata.LoadDirsFromS3( s3dir,localdir1 )
-    #     except:
-    #         print("list failed!")
 
     print("end")
