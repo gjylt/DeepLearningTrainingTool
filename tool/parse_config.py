@@ -1,6 +1,5 @@
 import os
 
-
 def get_config( findname, config_path = ""):
 
     if config_path == "":
@@ -35,3 +34,10 @@ def get_config( findname, config_path = ""):
 
         if name == findname:
             return value
+
+
+
+if __name__ == "__main__":
+
+
+    print("end")
