@@ -70,13 +70,8 @@ def train():
     #init model
     sysparas = get_model(sysparas)
 
-    # #init dataloader
-    # sysparas = get_dataloader(sysparas)
-
-    #
-    model_decide_metric = {}
-
     #start train
+    model_decide_metric = {}
     for iepoch in range(sysparas.epoch):
         sysparas.iepoch = iepoch
 
