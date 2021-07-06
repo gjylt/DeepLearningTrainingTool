@@ -95,16 +95,6 @@ def train():
     sysparas.log.log("finish train")
 
 
-
-
-
-
-
-
-
-
-
-
 if __name__ == "__main__":
 
     train()

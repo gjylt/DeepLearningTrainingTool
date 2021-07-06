@@ -225,7 +225,7 @@ def mk0502():
                 dictOut['phase'][tvt][label] = []
                 dictOut_statistic['phase'][tvt][label] = []
             #sequence = [ ["{}/{}_{:0>5}.jpg".format(imgPrefix, imgPrefix, j + 1),listMsg[j]] for j in range(i, i + sequence_len)]
-            sequence = [ "{}/{}_{:0>5}.jpg".format(imgPrefix, imgPrefix, j + 1) for j in range(i, i + sequence_len)]
+            sequence  = [ "{}/{}_{:0>5}.jpg".format(imgPrefix, imgPrefix, j + 1) for j in range(i, i + sequence_len)]
             sequence2 = [ ["{}/{}_{:0>5}.jpg".format(imgPrefix, imgPrefix, j + 1), listMsg[j]] for j in range(i, i + sequence_len)]
             if sequence not in dictOut['phase'][tvt][label]:
                 dictOut['phase'][tvt][label].append(sequence)

@@ -382,10 +382,10 @@ def class_dic(dir_anvil):
 if __name__ == "__main__":
     import os
 
-    dir_anvil = r'K:\wangyx\instrument_time\labeled_phase'
-    list_name_all = os.listdir(dir_anvil)
+    dir_anvil       = r'K:\wangyx\instrument_time\labeled_phase'
+    list_name_all   = os.listdir(dir_anvil)
     list_name_anvil = [x for x in list_name_all if ".anvil" in x]
     for name in list_name_anvil:
-        path_need = os.path.join(dir_anvil, name)
+        path_need  = os.path.join(dir_anvil, name)
         track_dict = readXML(path_need)
         print(f"'{name}',")
