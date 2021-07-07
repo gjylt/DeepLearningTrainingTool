@@ -2,7 +2,8 @@ import os
 import json
 import numpy as np
 import tqdm
-
+from  tool.readwrite import anvil2list
+from  tool.readwrite import traversalDir
 from tool.readXML import readXML
 
 
@@ -119,7 +120,7 @@ def generate_label():
             if label not in dictOut['phase'][tvt]:
                 dictOut['phase'][tvt][label] = []
                 dictOut_statistic['phase'][tvt][label] = []
-            sequence = [ "{}/{}_{:0>5}.jpg".format(videoname, videoname, j + 1) for j in range(i, i + sequence_len)]
+            sequence  = [ "{}/{}_{:0>5}.jpg".format(videoname, videoname, j + 1) for j in range(i, i + sequence_len)]
             sequence2 = [["{}/{}_{:0>5}.jpg".format(videoname, videoname, j + 1), listMsg[j]] for j in range(i, i + sequence_len)]
             if sequence not in dictOut['phase'][tvt][label]:
                 dictOut['phase'][tvt][label].append(sequence)
@@ -146,20 +147,27 @@ import math
 lable_dict = {'建立气腹':1, '分离粘连':2, '游离胆囊三角':3, '分离胆囊床':4, '清理术区':6, '取出胆囊':5}
 
 def get_json_label():
-    pth1 = "/Users/guan/Desktop/100-3/35"
-    pth2 = "/Users/guan/Desktop/100-3/36"
+    pth1 = "/Users/guan/Desktop/10video_2_analyze/58"
+    pth2 = "/Users/guan/Desktop/10video_2_analyze/59"
+    extract_fps = 1
     filelist1 = os.listdir(pth1)
     filelist2 = os.listdir(pth2)
-
 
     pth = "/Users/guan/Desktop/videopth_info.json"
     with open(pth) as f:
         data = json.load(f)
 
-    videolist = read_xls_rows("/Users/guan/Desktop/100-3.xls")
+    # videolist     = read_xls_rows("/Users/guan/Desktop/100-3.xls")
+    videolist     = []
+    filenamelist1 = os.listdir(pth1)
+    filenamelist2 = os.listdir(pth2)
+    for filename in filenamelist1:
+        if filename in filenamelist2:
+            videolist.append(filename)
+
     read_dict = {}
     for videoname in videolist:
-        videoname = videoname[0]
+        videoname = videoname.split('.')[0]
         for videoname1 in data.keys():
 
             if videoname1.__contains__(videoname) or videoname.__contains__(videoname1):
@@ -181,12 +189,13 @@ def get_json_label():
             else:
                 read_dict[videoname]["lable"].append( os.path.join(pth2, filename) )
 
-    fps = 8
+
     label_name_dict = {}
-    lablenames = []
+    lablenames      = []
+    prelabel = 0
     for filename in read_dict.keys():
         filelist = read_dict[filename]["lable"]
-        duration = math.ceil( read_dict[filename]["duration"] )*8
+        duration = math.ceil( read_dict[filename]["duration"] )*extract_fps
         labelarray_list = []
         for filepth in filelist:
             labelarray = np.zeros(duration, np.int)
@@ -199,26 +208,95 @@ def get_json_label():
                     lablenames.append(labelname)
 
                 labelid = lable_dict[labelname]
-                start = min(math.floor(label["start"]*8),duration)
-                end   = min(math.floor(label["end"]*8), duration )
+                start   = min(math.floor(label["start"]*extract_fps),duration)
+                end     = min(math.floor(label["end"]*extract_fps), duration )
+                if labelid > 6:
+                    labelid = prelabel
                 labelarray[start:end] = labelid
+                prelabel = labelid
 
             labelarray_list.append(labelarray)
 
+        merge = False
         if len( labelarray_list) == 2:
-            idxs = np.where( labelarray_list[0] != labelarray_list[1])
-            labelarray_list[0][idxs] = -1
-        label_name_dict[filename] = labelarray_list[0]
+            if merge == True:
+                idxs = np.where( labelarray_list[0] != labelarray_list[1])
+                labelarray_list[0][idxs] = -1
+                label_name_dict[filename] = labelarray_list[0].tolist()
+            else:
+                label_name_dict[filename] = [labelarray_list[0].tolist(), labelarray_list[1].tolist()]
+
+
+
     # print(lablenames)
 
     return label_name_dict
 
 
+listAllPhase = ["bg",
+                "Establish access",
+                "Adhesion lysis",
+                "Mobilize the Calot\'s triangle",
+                "Dissect gallbladder from liver bed",
+                "Extract the gallbladder",
+                "Clear the operative region",
+                "clip the cystic artery",
+                "clip the cystic duct",
+                "cut the cystic artery",
+                "cut the cystic duct"]
 
+def get_anvil_label( namelist ):
+    pthdir = r"/Users/guan/Desktop/LCPhase/100-1"
+
+    listAnvilPath = [x for x in traversalDir(pthdir) if '.anvil' in x]
+    listAnvilPath = sorted(listAnvilPath, key=lambda x: x.split('\\')[-1])
+
+    anvilist = {}
+    anvil_pth_dict = {}
+    for videoname in namelist:
+        surgid = videoname.split('-')[-1]
+        for pth in listAnvilPath:
+            videoname2 = pth.split('/')[-1].split('.')[0]
+            surgid2    = videoname2.split('-')[-1].split('_')[0]
+            # if videoname2.__contains__(videoname) or videoname.__contains__(videoname2):
+            # if surgid.__contains__(surgid2) or surgid2.__contains__(surgid):
+            if surgid == surgid2:
+
+                if videoname not in anvil_pth_dict.keys():
+                    labels = anvil2list(pth, listAllPhase)
+                    anvil_pth_dict[videoname] = [labels]
+
+                    anvilist[videoname] = [ pth]
+                else:
+                    labels = anvil2list(pth, listAllPhase)
+                    anvil_pth_dict[videoname].append(labels)
+
+                    anvilist[videoname].append(pth)
+
+
+    return anvil_pth_dict
+
+
+from tool.math_tool import align_list
+from tool.plot_figure import visualizationArray
 if __name__ == "__main__":
 
-    # get_json_label()
+    jsonlabel    = get_json_label()
+    anvil_label  = get_anvil_label( jsonlabel.keys())
+    compare_dict = {}
+    savedir = "/Users/guan/Desktop/10video_2_analyze/picture/"
+    if not os.path.exists(savedir):
+        os.makedirs(savedir)
 
-    generate_label()
+    namelist = ['czx','wsd','gjy','wyx']
+    for videoname in anvil_label.keys():
+        if videoname in jsonlabel.keys():
+            arraylist = [jsonlabel[videoname][0],jsonlabel[videoname][1],anvil_label[videoname][0],anvil_label[videoname][1]]
+            compare_dict[videoname] =  align_list( arraylist )
+            visualizationArray( compare_dict[videoname][0], videoname, savedir, namelist)
+
+    savepth = "/Users/guan/Desktop/10video_2_analyze/compare_dict.json"
+    with open(savepth,"w") as f:
+        json.dump(compare_dict, f)
 
     print("end")

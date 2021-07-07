@@ -66,7 +66,6 @@ def save_checkpoint( sysparas, is_best = False):
 def train():
     #init paras
     sysparas = paras()
-
     #init model
     sysparas = get_model(sysparas)
 
