@@ -73,62 +73,90 @@ def generate_label():
     dictAnvil = {}
     dictJson  = {}
 
+    pth = "./LCPhase_version1_len8_1.json"
+    with open(pth) as f:
+        LCPhase6V1 = json.load(f)
 
-    savePath     = "./LCPhase{}TestV1_action_len40_8.json".format(len(listUse) - 1)
-    savePath_statistic= ".s/LCPhase{}TestV1_action_len40_8_statistic.json".format(len(listUse) - 1)
-    extract_fps  = 8
-    sequence_len = 40
+    version1_train = []
+    version1_valid = []
+    for phase in LCPhase6V1["phase"].keys():
+
+        for label in LCPhase6V1["phase"][phase].keys():
+
+            for sequnce in LCPhase6V1["phase"][phase][label]:
+                videoname = sequnce[-1].split("/")[0]
+                if phase == "train" and videoname not in version1_train:
+                    version1_train.append(videoname)
+                if phase == "valid" and videoname not in version1_valid:
+                    version1_valid.append(videoname)
+
+    savePath           = "./LCPhase_version1_len8_1.json"
+    savePath_statistic = "./LCPhase_version1_len8_1_statistic.json"
+    extract_fps        = 8
+    sequence_len       = 8
+    cc                 = 0
+    dictOut            = {"phase": {}}
+    dictOut_statistic  = {"phase": {}}
+    tvt                = "test"
+    # label_nane_dict    = get_json_label()
+    # pth = "/Users/guan/Desktop/100-1.txt"
+    # with open(pth) as f:
+    #     version1 = f.readlines()
+    # version1_train = [ data.replace("\'","").replace("[","").replace("]","").replace("\n","") for data in version1[1].split(',') ]
+    # version1_valid = [ data.replace("\'","").replace("[","").replace("]","").replace("\n","") for data in version1[3].split(',') ]
 
 
+    pth = "/Users/guan/Desktop/Lc200_fps8_video_label.json"
+    with open(pth) as f:
+        label_nane_dict = json.load(f)
 
-    cc=0
-    dictOut = {"phase": {}}
-    dictOut_statistic = {"phase": {}}
-    tvt = "test"
+    train_dict = {
+        "train":{},
+        "valid":{}
+    }
+    for videoname in label_nane_dict.keys():
+        if videoname in version1_train:
+            train_dict["train"][videoname] = label_nane_dict[videoname]
+        if videoname in version1_valid:
+            train_dict["valid"][videoname] = label_nane_dict[videoname]
 
+    ori_fps   = 8
+    label_fps = 1
+    videoidx = 0
+    for phase in train_dict.keys():
 
+        if phase not in dictOut['phase'].keys():
+            dictOut['phase'][phase] = {}
+            dictOut_statistic['phase'][phase] = {}
 
-    label_nane_dict = get_json_label()
+        for videoname in train_dict[phase].keys():
 
+            print( videoidx,"/", len( train_dict["valid"].keys()) + len( train_dict["train"].keys()))
+            videoidx += 1
 
+            listMsg = train_dict[phase][videoname]
+            for i in range(len(listMsg) - sequence_len*ori_fps - 1):
+                label = listMsg[i + sequence_len*ori_fps-1]
+                FindDiffirend = False
+                for idx in np.arange(i,i+sequence_len*ori_fps, ori_fps ):
+                    curlabel = listMsg[idx]
+                    if curlabel != label:
+                        FindDiffirend = True
+                        break
+                if FindDiffirend:
+                    continue
 
-    for videoname in tqdm.tqdm(label_nane_dict.keys()):
-
-        listMsg = label_nane_dict[videoname].tolist()
-
-        if tvt not in dictOut['phase'].keys():
-            dictOut['phase'][tvt] = {}
-            dictOut_statistic['phase'][tvt] = {}
-        # if imgPrefix == "20201117-LC-HX-0016893143_ORIGIN":
-        #     stop = 0
-        # else:
-        #     continue
-        for i in range(len(listMsg) - sequence_len - 1):
-            label = listMsg[i + sequence_len-1]
-            FindDiffirend = False
-            for idx in np.arange(i,i+sequence_len):
-                curlabel = listMsg[idx]
-                if curlabel != label:
-                    FindDiffirend = True
-                    break
-            if FindDiffirend:
-                continue
-
-            if label == -1:
-                cc+=1
-                continue
-            if label not in dictOut['phase'][tvt]:
-                dictOut['phase'][tvt][label] = []
-                dictOut_statistic['phase'][tvt][label] = []
-            sequence  = [ "{}/{}_{:0>5}.jpg".format(videoname, videoname, j + 1) for j in range(i, i + sequence_len)]
-            sequence2 = [["{}/{}_{:0>5}.jpg".format(videoname, videoname, j + 1), listMsg[j]] for j in range(i, i + sequence_len)]
-            if sequence not in dictOut['phase'][tvt][label]:
-                dictOut['phase'][tvt][label].append(sequence)
-                dictOut_statistic['phase'][tvt][label].append(sequence2)
-
-    # savePath_video_label = "/home/withai/Desktop/LCLabelFiles/Lc200Test_fps8_video_label.json"
-    # with open(savePath_video_label,'w') as f:
-    #     json.dump(video_label_dict,f)
+                if label == -1:
+                    cc+=1
+                    continue
+                if label not in dictOut['phase'][phase]:
+                    dictOut['phase'][phase][label] = []
+                    dictOut_statistic['phase'][phase][label] = []
+                sequence  = [ "{}/{}_{:0>5}.jpg".format(videoname, videoname, int( (j + 1)*1.0/ori_fps) ) for j in range(i, i + sequence_len*ori_fps,ori_fps)]
+                sequence2 = [["{}/{}_{:0>5}.jpg".format(videoname, videoname, int( (j + 1)*1.0/ori_fps) ), listMsg[j]] for j in range(i, i + sequence_len*ori_fps,ori_fps)]
+                if sequence not in dictOut['phase'][phase][label]:
+                    dictOut['phase'][phase][label].append(sequence)
+                    dictOut_statistic['phase'][phase][label].append(sequence2)
 
     print(cc)
     print('write in')
@@ -277,10 +305,10 @@ def get_anvil_label( namelist ):
     return anvil_pth_dict
 
 
-from tool.math_tool import align_list
+from tool.math_tool   import align_list
 from tool.plot_figure import visualizationArray
-if __name__ == "__main__":
 
+def visualize_lable_different():
     jsonlabel    = get_json_label()
     anvil_label  = get_anvil_label( jsonlabel.keys())
     compare_dict = {}
@@ -298,5 +326,11 @@ if __name__ == "__main__":
     savepth = "/Users/guan/Desktop/10video_2_analyze/compare_dict.json"
     with open(savepth,"w") as f:
         json.dump(compare_dict, f)
+
+if __name__ == "__main__":
+
+    generate_label()
+
+
 
     print("end")

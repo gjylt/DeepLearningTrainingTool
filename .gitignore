@@ -2,3 +2,5 @@ __pycache__/
 .idea/
 config.txt
 log.txt
+tool/LCPhase_version1_len8_1.json
+tool/LCPhase_version1_len8_1_statistic.json

@@ -6,11 +6,9 @@ import numpy as np
 def visualizationArray( arraylist, videoname , savedir ="",namlist = [] ):
 
     colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k', 'w']
-
     plt.figure()
     pic_index = len(arraylist)*100+10
     idx = 1
-
 
     for array in arraylist:
 
