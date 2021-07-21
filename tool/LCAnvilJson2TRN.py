@@ -260,10 +260,7 @@ for op in tqdm.tqdm(listOp):
     if tvt not in dictOut['phase'].keys():
         dictOut['phase'][tvt] = {}
         dictOut_statistic['phase'][tvt] = {}
-    # if imgPrefix == "20201117-LC-HX-0016893143_ORIGIN":
-    #     stop = 0
-    # else:
-    #     continue
+
     for i in range(len(listMsg) - sequence_len - 1):
         label = listMsg[i + sequence_len-1]
         FindDiffirend = False
@@ -281,7 +278,7 @@ for op in tqdm.tqdm(listOp):
         if label not in dictOut['phase'][tvt]:
             dictOut['phase'][tvt][label] = []
             dictOut_statistic['phase'][tvt][label] = []
-        sequence = [ "{}/{}_{:0>5}.jpg".format(imgPrefix, imgPrefix, j + 1) for j in range(i, i + sequence_len)]
+        sequence  = [ "{}/{}_{:0>5}.jpg".format(imgPrefix, imgPrefix, j + 1) for j in range(i, i + sequence_len)]
         sequence2 = [["{}/{}_{:0>5}.jpg".format(imgPrefix, imgPrefix, j + 1), listMsg[j]] for j in range(i, i + sequence_len)]
         if sequence not in dictOut['phase'][tvt][label]:
             dictOut['phase'][tvt][label].append(sequence)
