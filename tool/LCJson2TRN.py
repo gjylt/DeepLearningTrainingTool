@@ -72,16 +72,28 @@ listUse = ["bg",
 
 def generate_label():
 
-
-
-    version1_train_val_split_path = "/Users/guan/Desktop/videoname_phase_list_100-1.json"
+    version1_train_val_split_path = "/home/withai/Desktop/LCLabelFiles/videoname_phase_list_100-1.json"
     with open(version1_train_val_split_path) as f:
         train_val = json.load(f)
     version1_train = train_val['train']
     version1_valid = train_val['valid']
 
-    savePath           = "/Users/guan/Desktop/LCPhase_version1_len24_2_annotator.json"
-    savePath_statistic = "/Users/guan/Desktop/LCPhase_version1_len24_2_annotator_statistic.json"
+    version2_test_dir = "/home/withai/Pictures/LCFrame/100-2"
+    version2_test     = os.listdir(version2_test_dir)
+    version2_test_new = []
+    for video2 in version2_test:
+        resident_id2 = video2.split('_')[0].split('-')[-1]
+        find = False
+        for video1 in version1_train+version1_valid:
+            resident_id1 = video1.split('_')[0].split('-')[-1]
+            if resident_id1==resident_id2:
+                find = True
+        if not find:
+            version2_test_new.append(video2)
+
+
+    savePath           = "/home/withai/Desktop/LCLabelFiles/LCPhase_version2_len24_2_annotator.json"
+    savePath_statistic = "/home/withai/Desktop/LCLabelFiles/LCPhase_version2_len24_2_annotator_statistic.json"
     extract_fps        = 8
     sequence_len       = 24
     cc                 = 0
@@ -90,21 +102,29 @@ def generate_label():
     label_nane_dict    = get_json_label( extract_fps )
     train_dict = {
         "train":{},
-        "valid":{}
+        "valid":{},
+        "test":{}
     }
 
     for videoname in label_nane_dict.keys():
         resident_id = videoname.split('-')[-1]
         find = False
-        for videoname1 in version1_train:
-            if videoname1.__contains__(resident_id):
-                train_dict["train"][videoname1] = label_nane_dict[videoname]
-                find = True
-                break
 
-        for videoname1 in version1_valid:
+        # for videoname1 in version1_train:
+        #     if videoname1.__contains__(resident_id):
+        #         train_dict["train"][videoname1] = label_nane_dict[videoname]
+        #         find = True
+        #         break
+        #
+        # for videoname1 in version1_valid:
+        #     if videoname1.__contains__(resident_id):
+        #         train_dict["valid"][videoname1] = label_nane_dict[videoname]
+        #         find = True
+        #         break
+
+        for videoname1 in version2_test_new:
             if videoname1.__contains__(resident_id):
-                train_dict["valid"][videoname1] = label_nane_dict[videoname]
+                train_dict["test"][videoname1] = label_nane_dict[videoname]
                 find = True
                 break
 
@@ -122,7 +142,7 @@ def generate_label():
 
         for videoname in train_dict[phase].keys():
 
-            print( videoidx,"/", len( train_dict["valid"].keys()) + len( train_dict["train"].keys()))
+            print( videoidx,"/", len( train_dict["valid"].keys()) + len( train_dict["train"].keys()) + len( train_dict["test"].keys()))
             videoidx += 1
 
             listMsg = train_dict[phase][videoname]
@@ -207,13 +227,13 @@ video_path ={
 import imageio
 
 def get_json_label(extract_fps):
-    pth1 = "/Users/guan/Desktop/100-2/100-2/CZX/"
-    pth2 = "/Users/guan/Desktop/100-2/100-2/WSD/"
+    pth1 = "/home/withai/Desktop/100-2/100-2/CZX/"
+    pth2 = "/home/withai/Desktop/100-2/100-2/WSD/"
     # extract_fps = 8
     filelist1   = os.listdir(pth1)
     filelist2   = os.listdir(pth2)
 
-    pth = "/Users/guan/Desktop/videopth_info_.json"
+    pth = "/home/withai/Desktop/videopth_info_.json"
     with open(pth) as f:
         data = json.load(f)
 
@@ -385,37 +405,7 @@ def visualize_lable_different():
         json.dump(compare_dict, f)
 
 
-def generate_train_label( listMsg, sequence_len, data_phase, dictOut, dictOut_statistic):
 
-
-    if data_phase not in dictOut['phase'].keys():
-        dictOut['phase'][data_phase] = {}
-        dictOut_statistic['phase'][data_phase] = {}
-
-    for i in range(len(listMsg) - sequence_len - 1):
-        label = listMsg[i + sequence_len-1]
-        FindDiffirend = False
-        for idx in np.arange(i,i+sequence_len):
-            curlabel = listMsg[idx]
-            if curlabel != label:
-                FindDiffirend = True
-                break
-        if FindDiffirend:
-            continue
-
-        if label == -1:
-            continue
-
-        if label not in dictOut['phase'][data_phase]:
-            dictOut['phase'][data_phase][label] = []
-            dictOut_statistic['phase'][data_phase][label] = []
-        sequence  = [ "{}/{}_{:0>5}.jpg".format(videoname, videoname, j + 1) for j in range(i, i + sequence_len)]
-        sequence2 = [["{}/{}_{:0>5}.jpg".format(videoname, videoname, j + 1), listMsg[j]] for j in range(i, i + sequence_len)]
-        if sequence not in dictOut['phase'][data_phase][label]:
-            dictOut['phase'][data_phase][label].append(sequence)
-            dictOut_statistic['phase'][data_phase][label].append(sequence2)
-
-    return dictOut, dictOut_statistic
 
 
 if __name__ == "__main__":
