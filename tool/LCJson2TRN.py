@@ -74,14 +74,14 @@ def generate_label():
 
 
 
-    version1_train_val_split_path = "/home/withai/Desktop/LCLabelFiles/videoname_phase_list_100-1.json"
+    version1_train_val_split_path = "/Users/guan/Desktop/videoname_phase_list_100-1.json"
     with open(version1_train_val_split_path) as f:
         train_val = json.load(f)
     version1_train = train_val['train']
     version1_valid = train_val['valid']
 
-    savePath           = "/home/withai/Desktop/LCLabelFiles/LCPhase_version1_len24_2_annotator.json"
-    savePath_statistic = "/home/withai/Desktop/LCLabelFiles/LCPhase_version1_len24_2_annotator_statistic.json"
+    savePath           = "/Users/guan/Desktop/LCPhase_version1_len24_2_annotator.json"
+    savePath_statistic = "/Users/guan/Desktop/LCPhase_version1_len24_2_annotator_statistic.json"
     extract_fps        = 8
     sequence_len       = 24
     cc                 = 0
@@ -207,13 +207,13 @@ video_path ={
 import imageio
 
 def get_json_label(extract_fps):
-    pth1 = "/home/withai/Desktop/LCLabelFiles/100-1-reannotation-wsd-czx/CZX/phases"
-    pth2 = "/home/withai/Desktop/LCLabelFiles/100-1-reannotation-wsd-czx/WSD/phases"
+    pth1 = "/Users/guan/Desktop/100-2/100-2/CZX/"
+    pth2 = "/Users/guan/Desktop/100-2/100-2/WSD/"
     # extract_fps = 8
     filelist1   = os.listdir(pth1)
     filelist2   = os.listdir(pth2)
 
-    pth = "/home/withai/Desktop/videopth_info_.json"
+    pth = "/Users/guan/Desktop/videopth_info_.json"
     with open(pth) as f:
         data = json.load(f)
 
