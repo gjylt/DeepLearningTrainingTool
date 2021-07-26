@@ -227,13 +227,13 @@ video_path ={
 import imageio
 
 def get_json_label(extract_fps):
-    pth1 = "/home/withai/Desktop/100-2/100-2/CZX/"
-    pth2 = "/home/withai/Desktop/100-2/100-2/WSD/"
+    pth1 = "/Users/guan/Desktop/100-2/100-2/CZX/"
+    pth2 = "/Users/guan/Desktop/100-2/100-2/WSD/"
     # extract_fps = 8
     filelist1   = os.listdir(pth1)
     filelist2   = os.listdir(pth2)
 
-    pth = "/home/withai/Desktop/videopth_info_.json"
+    pth = "/Users/guan/Desktop/videopth_info_.json"
     with open(pth) as f:
         data = json.load(f)
 

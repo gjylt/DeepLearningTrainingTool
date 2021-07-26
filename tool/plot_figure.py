@@ -17,7 +17,8 @@ def visualizationArray( arraylist, videoname , savedir ="",namlist = [] ):
         plt.axhline(y=1, ls="--")
         plt.axhline(y=3, ls="--")
         plt.axhline(y=5, ls="--")
-        plt.title(videoname)
+        if idx == 1:
+            plt.title(videoname)
         if len(namlist) > 0:
             titlename = namlist[idx-1]
         else:
@@ -26,7 +27,6 @@ def visualizationArray( arraylist, videoname , savedir ="",namlist = [] ):
         ax.plot(x, np.array(array), color=colors[idx])
         # plt.ylabel( tool_name_list1[idx])
         plt.yticks([0, 2, 4,6])
-
         idx += 1
 
     if savedir !="" and os.path.exists( savedir ):
