@@ -77,7 +77,7 @@ def get_video_info():
                 try:
                     vid = imageio.get_reader(pth, 'ffmpeg')
                     metaData = vid.get_meta_data()
-                    fps = metaData['fps']
+                    fps      = metaData['fps']
                     duration = metaData['duration']
                     video_dict[videoname] = {}
                     video_dict[videoname]['path'] = pth
@@ -102,7 +102,9 @@ video_path ={
 "LC-XN-IP00000320162":"/mnt/video/LC10000/CompleteVideo/hospital_id=2/surgery_id=268/video/20201208-LC-XN-IP00000320162_ORIGIN.mp4"
 }
 
-if __name__ == "__main__":
+
+
+def extract_frame():
 
     for videoname in video_path.keys():
         path = os.path.join( "/mnt/video/LC10000/CompleteVideo/", video_path[videoname] )
@@ -141,5 +143,61 @@ if __name__ == "__main__":
 
     savedir = get_config("savedir")
     extract_frame( videopaths, savedir)
+
+
+
+import shutil
+
+from tool.LCDataProcess.LCJson2TRN import get_json_label
+
+def extracted_parkland_picture():
+
+    extrcat_fps = 1
+    label_name_dict = get_json_label(extrcat_fps)
+    picture_dir = "/home/withai/Pictures/LCFrame/100-1-2-8fps"
+    videonamelist = os.listdir(picture_dir)
+    new_label_dict = {}
+    for videoname in videonamelist:
+        resident_id = videoname.split("_")[0].split("-")[-1]
+        for videoname1 in label_name_dict.keys():
+            if videoname1.__contains__(resident_id):
+                new_label_dict[videoname] = label_name_dict[videoname1]
+            # print("")
+
+    extrcat_save_dir = "/home/withai/Desktop/extracted_lc_img_from_begin"
+    if not os.path.exists(extrcat_save_dir):
+        os.makedirs(extrcat_save_dir)
+
+    # extract picture
+
+    for videoname in new_label_dict.keys():
+
+        saveImageFolder = os.path.join(extrcat_save_dir, videoname)
+        if not os.path.exists(saveImageFolder):
+            os.makedirs(saveImageFolder)
+        srcImageFolder = os.path.join(picture_dir, videoname)
+
+        labelist = new_label_dict[videoname]
+        if 2 in labelist:
+            AL_indx = labelist.index(2)
+        else:
+            AL_indx = len(labelist)
+        MCT_indx = labelist.index(3)
+        extract_indx = min(AL_indx, MCT_indx)
+        start = 0  # max(0, extract_indx-10)
+        end = extract_indx + 10
+        for imgid in range(start, end):
+
+            srcimgpth = "{}/{}_{:0>5}.jpg".format(srcImageFolder, srcImageFolder.split('/')[-1], imgid * 8)
+            saveimgpth = "{}/{}_{:0>5}.jpg".format(saveImageFolder, saveImageFolder.split('/')[-1], imgid * 8)
+            if os.path.exists(srcimgpth):
+                shutil.copy(srcimgpth, saveimgpth)
+
+    # print("end")
+
+
+if __name__ == "__main__":
+
+    extracted_parkland_picture()
 
     print("end")

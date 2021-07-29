@@ -12,14 +12,12 @@ import torch.nn.functional as F
 import multiprocessing as mp
 import imageio
 # from utils.TRN import GroupScale, GroupCenterCrop, Stack, ToTorchFormatTensor, normalizeFunc
-from transforms import *
-from cfg.TRN import scaleSize, cropSize, arch, modality
+from   transforms import *
 import numpy as np
 import tqdm
-from PIL import Image
+from   PIL import Image
 import json
-from TransposePhaseResult2JSON import getJSON,label_list,data
-from ctypes import *
+from   ctypes import *
 
 
 def post_process(native_list):

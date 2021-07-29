@@ -1,14 +1,14 @@
 import os
 import time
 
-from ctypes import *
+from   ctypes import *
 import cv2
 import imageio
 import numpy as np
 import torch
 import torch.nn as nn
 # from ffmpy import FFmpeg as ff
-from torchvision import models
+from   torchvision import models
 import json
 import tqdm
 # from . import phase_post_process
@@ -20,9 +20,7 @@ import sys
 PATH = "/root/EFS/20201209-LC-HX-12.mp4"
 
 
-# SAVE = "/root/Algorithm/testPic/test"
-
-
+#SAVE = "/root/Algorithm/testPic/test"
 class ResNet34(nn.Module):
     r"""Forms a complete ResNet classifier producing vectors of size num_classes, by initializng 5 layers,
     with the number of blocks in each layer set by layer_sizes, and by performing a global average pool

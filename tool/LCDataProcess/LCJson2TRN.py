@@ -5,8 +5,7 @@ import numpy as np
 import tqdm
 from  tool.readwrite import anvil2list
 from  tool.readwrite import traversalDir
-from tool.readXML import readXML
-
+from  tool.readXML   import readXML
 
 def dict2list(dictAnvilMsg, listPhase, fps = 1):
     listMsg = [0] * 9999
@@ -30,8 +29,6 @@ def dict2list(dictAnvilMsg, listPhase, fps = 1):
             maxTime = end
         listMsg[start:end + 1] = [listPhase.index(label)] * (end - start + 1)
     return listMsg[:maxTime]
-
-
 
 listAnvil = ["bg",
              "Establish access",
@@ -78,7 +75,7 @@ def generate_label():
     version1_train = train_val['train']
     version1_valid = train_val['valid']
 
-    version2_test_dir = "/home/withai/Pictures/LCFrame/100-2"
+    version2_test_dir = "/home/withai/Pictures/LCFrame/100-1-2-8fps"
     version2_test     = os.listdir(version2_test_dir)
     version2_test_new = []
     for video2 in version2_test:
@@ -91,11 +88,10 @@ def generate_label():
         if not find:
             version2_test_new.append(video2)
 
-
-    savePath           = "/home/withai/Desktop/LCLabelFiles/LCPhase_version2_len24_2_annotator.json"
-    savePath_statistic = "/home/withai/Desktop/LCLabelFiles/LCPhase_version2_len24_2_annotator_statistic.json"
+    savePath           = "/home/withai/Desktop/LCLabelFiles/LCPhase_version2_len8_fps8_2_annotator.json"
+    savePath_statistic = "/home/withai/Desktop/LCLabelFiles/LCPhase_version2_len8_fps8_2_annotator_statistic.json"
     extract_fps        = 8
-    sequence_len       = 24
+    sequence_len       = 8
     cc                 = 0
     dictOut            = {"phase": {}}
     dictOut_statistic  = {"phase": {}}
@@ -111,19 +107,22 @@ def generate_label():
         find = False
 
         # for videoname1 in version1_train:
-        #     if videoname1.__contains__(resident_id):
+        #     resident_id = videoname1.split("_")[0].split("-")[-1]
+        #     if videoname.__contains__(resident_id):
         #         train_dict["train"][videoname1] = label_nane_dict[videoname]
         #         find = True
         #         break
         #
         # for videoname1 in version1_valid:
-        #     if videoname1.__contains__(resident_id):
+        #     resident_id = videoname1.split("_")[0].split("-")[-1]
+        #     if videoname.__contains__(resident_id):
         #         train_dict["valid"][videoname1] = label_nane_dict[videoname]
         #         find = True
         #         break
 
         for videoname1 in version2_test_new:
-            if videoname1.__contains__(resident_id):
+            resident_id = videoname1.split("_")[0].split("-")[-1]
+            if videoname.__contains__(resident_id):
                 train_dict["test"][videoname1] = label_nane_dict[videoname]
                 find = True
                 break
@@ -133,7 +132,7 @@ def generate_label():
 
 
     videoidx  = 0
-    label_fps = 1  #extract_fps should be exact divided by label_fps
+    label_fps = 8  #extract_fps should be exact divided by label_fps
     for phase in train_dict.keys():
 
         if phase not in dictOut['phase'].keys():
@@ -227,13 +226,13 @@ video_path ={
 import imageio
 
 def get_json_label(extract_fps):
-    pth1 = "/Users/guan/Desktop/100-2/100-2/CZX/"
-    pth2 = "/Users/guan/Desktop/100-2/100-2/WSD/"
+    pth1 = "/home/withai/Desktop/LCLabelFiles/20210729_label_100-2/CZX/special_events"
+    pth2 = "/home/withai/Desktop/LCLabelFiles/20210729_label_100-2/WSD/special_events"
     # extract_fps = 8
     filelist1   = os.listdir(pth1)
     filelist2   = os.listdir(pth2)
 
-    pth = "/Users/guan/Desktop/videopth_info_.json"
+    pth = "/home/withai/Desktop/LCLabelFiles/videopth_info_.json"
     with open(pth) as f:
         data = json.load(f)
 
@@ -292,7 +291,6 @@ def get_json_label(extract_fps):
             else:
                 read_dict[videoname]["lable"].append( os.path.join(pth2, filename) )
 
-
     label_name_dict = {}
     lablenames      = []
     prelabel = 0
@@ -314,7 +312,8 @@ def get_json_label(extract_fps):
                 if labelname not in lablenames:
                     lablenames.append(labelname)
 
-                labelid = lable_dict[labelname]
+                # labelid = lable_dict[labelname]
+                labelid = label['id']
                 start   = min(math.floor(label["start"]*extract_fps),duration)
                 end     = min(math.floor(label["end"]*extract_fps), duration )
 
@@ -405,14 +404,19 @@ def visualize_lable_different():
         json.dump(compare_dict, f)
 
 
-
-
-
 if __name__ == "__main__":
 
-    generate_label()
+    # path = "/home/withai/Desktop/LCLabelFiles/LCPhase_version1_len8_2_annotator.json"
+    # with open(path) as f:
+    #     data = json.load(f)
+
+
+    # generate_label()
 
     # get_json_file()
+
+    # extracted_parkland_picture()
+
 
 
     print("end")
