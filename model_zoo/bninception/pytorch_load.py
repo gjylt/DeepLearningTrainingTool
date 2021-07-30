@@ -3,14 +3,16 @@ from torch import nn
 from .layer_factory import get_basic_layer, parse_expr
 import torch.utils.model_zoo as model_zoo
 import yaml
-
+import os
 
 class BNInception(nn.Module):
     # weight_url='../checkPoint/bn_inception-9f5701afb96c8044.pth' downloaded
-    def __init__(self, model_path='model_zoo/bninception/bn_inception.yaml', num_classes=101,
+    def __init__(self, model_path='./model_zoo/bninception/bn_inception.yaml', num_classes=101,
                  weight_url='checkPoint/bn_inception.pth'):
         super(BNInception, self).__init__()
 
+        os.chdir("../../")
+        print(os.getcwd())
         manifest = yaml.load(open(model_path))
 
         layers = manifest['layers']

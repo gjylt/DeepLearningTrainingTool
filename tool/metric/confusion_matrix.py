@@ -93,7 +93,7 @@ def compute_ap(recall, precision):
 import json
 def confusematrix():
 
-    pth = "/home/withai/Desktop/LCLabelFiles/LCPhase6Test_len24_version2_result.json"
+    pth = "/home/withai/Desktop/LCLabelFiles/LCPhase6Test_len24_version2_withou_LSH_result.json"
     with open(pth,'r') as f:
         data = json.load(f)
 
@@ -149,7 +149,7 @@ def confusematrix():
 
     tmpconf = conf
 
-    p, r, ap, f1, labels = ap_per_class(np.array(tp), np.array(tmpconf), np.array(sequenceResult), np.array(sequenceLabel))
+    p, r, ap, f1, labels = ap_per_class( np.array(tmpconf), np.array(sequenceResult), np.array(sequenceLabel))
 
     strname = "p"+"\t"
     for i in p:
@@ -171,7 +171,7 @@ def confusematrix():
         strname += str(round(i,3))+"\t"
     print(strname)
 
-from LCJson2TRN import get_json_label
+from tool.LCDataProcess.LCJson2TRN import get_json_label
 from tool.plot_figure import visualizationArray
 
 def confuse_matrix( predlist, labelist):
@@ -307,12 +307,12 @@ def compute_postprocess():
 
 if __name__ =="__main__":
 
-    path = "/Users/guan/Desktop/videoname_phase_list_100-1.json"
-    with open(path) as f:
-        data = json.load(f)
+    # path = "/Users/guan/Desktop/videoname_phase_list_100-1.json"
+    # with open(path) as f:
+    #     data = json.load(f)
 
     # compute_postprocess()
-    # confusematrix()
+    confusematrix()
     print("")
 
 

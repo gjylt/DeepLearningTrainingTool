@@ -77,6 +77,7 @@ def train():
         # train
         sysparas.epoch_type = "train"
         train_metric = process_epoch( sysparas )
+
         #log
         log_metric(iepoch, sysparas, train_metric)
 

@@ -155,58 +155,65 @@ class customCVSDataSet(data.Dataset):
         self.dataSetName = dataSetName
         self.categories = categories
         self.rule       = rule
-        self.init  = False
         with open(pathJson, encoding='utf-8') as f:
             dictMsg = json.load(f)
             f.close()
 
-        if  len(dictMsg[rule].keys()) > 0:
-            video_list = []
-            new_dict = {}
-            for phase in dictMsg['phase'].keys():
+        video_list = []
+        new_dict = {}
+        for phase in dictMsg['phase'].keys():
 
-                for labelid in dictMsg['phase'][phase].keys():
+            for labelid in dictMsg['phase'][phase].keys():
 
-                    for sequnceid in range( len( dictMsg['phase'][phase][labelid])):
+                for sequnceid in range( len( dictMsg['phase'][phase][labelid])):
 
-                        sequnce = dictMsg['phase'][phase][labelid][sequnceid]
-                        for imgpthid in range(len(sequnce)):
-                            sequnce[imgpthid] = sequnce[imgpthid].replace('\\','/')
-                        dictMsg['phase'][phase][labelid][sequnceid] = sequnce
-
-                        videoname = sequnce[0].split('/')[0]
-                        if videoname not in video_list:
-                            video_list.append(videoname)
-
-
-            labels = categories #sorted(list(dictMsg[rule][dataSetName].keys()))
-            self.listSequences = []
-            self.listLabels = []
-            self.listdir    = os.listdir(dirImage)
-
-            pg_totalnum = 0
-            for label in labels:
-                pg_totalnum += len(dictMsg[rule][dataSetName][label])
-                for sequnce in dictMsg[rule][dataSetName][label]:
-                    videoname = sequnce[0].split('/')[0]
-                    # print(videoname)
-                    if videoname not in self.listdir:
+                    sequnce = dictMsg['phase'][phase][labelid][sequnceid]
+                    if sequnce[0].__contains__("LSH"):
                         continue
-                    self.listSequences.append( sequnce )
-                    self.listLabels.append(label)
+                    for imgpthid in range(len(sequnce)):
+                        sequnce[imgpthid] = sequnce[imgpthid].replace('\\','/')
+                    dictMsg['phase'][phase][labelid][sequnceid] = sequnce
 
-            self.label_map_dic={
-                '0':0,
-                '7': 1,
-                '8': 2,
-                '9': 3,
-                '10': 4,
-            }
-
-            self.balance_bg_pg_fortest( dictMsg, pg_totalnum)
-            self.init = True
+                    videoname = sequnce[0].split('/')[0]
+                    if videoname not in video_list:
+                        video_list.append(videoname)
 
 
+        labels = categories #sorted(list(dictMsg[rule][dataSetName].keys()))
+        self.listSequences = []
+        self.listLabels = []
+        self.listdir    = os.listdir(dirImage)
+
+        pg_totalnum = 0
+        for label in labels:
+            pg_totalnum += len(dictMsg[rule][dataSetName][label])
+            for sequnce in dictMsg[rule][dataSetName][label]:
+                videoname = sequnce[0].split('/')[0]
+                # print(videoname)
+                if videoname not in self.listdir:
+                    continue
+                self.listSequences.append( sequnce )
+                self.listLabels.append(label)
+
+        # self.label_map_dic={
+        #     '0':0,
+        #     '7': 1,
+        #     '8': 2,
+        #     '9': 3,
+        #     '10': 4,
+        # }
+
+        self.label_map_dic={
+            '0':0,
+            '1': 1,
+            '2': 2,
+            '3': 3,
+            '4': 4,
+            '5': 5,
+            '6': 6,
+        }
+
+        # self.balance_bg_pg_fortest( dictMsg, pg_totalnum)
 
 
     def balance_bg_pg_fortest(self,dictMsg, pg_totalnum):

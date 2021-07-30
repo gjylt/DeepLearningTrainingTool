@@ -225,9 +225,20 @@ video_path ={
 
 import imageio
 
+
+lable_dict = {'建立气腹':1,
+              '分离粘连':2,
+              '游离胆囊三角':3,
+              '分离胆囊床':4,
+              '清理术区':6,
+              '抓取胆囊':5,
+              '取出胆囊':5,
+              "清理术野":6}
+
+
 def get_json_label(extract_fps):
-    pth1 = "/home/withai/Desktop/LCLabelFiles/20210729_label_100-2/CZX/special_events"
-    pth2 = "/home/withai/Desktop/LCLabelFiles/20210729_label_100-2/WSD/special_events"
+    pth1 = "/home/withai/Desktop/phase-100-1/100-1/100-1/CZX"
+    pth2 = "/home/withai/Desktop/phase-100-1/100-1/100-1/WSD"
     # extract_fps = 8
     filelist1   = os.listdir(pth1)
     filelist2   = os.listdir(pth2)
@@ -312,8 +323,8 @@ def get_json_label(extract_fps):
                 if labelname not in lablenames:
                     lablenames.append(labelname)
 
-                # labelid = lable_dict[labelname]
-                labelid = label['id']
+                labelid = lable_dict[labelname]
+                # labelid = label['id']
                 start   = min(math.floor(label["start"]*extract_fps),duration)
                 end     = min(math.floor(label["end"]*extract_fps), duration )
 
@@ -411,7 +422,7 @@ if __name__ == "__main__":
     #     data = json.load(f)
 
 
-    # generate_label()
+    generate_label()
 
     # get_json_file()
 

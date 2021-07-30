@@ -1,9 +1,7 @@
-import os
 from torch.utils.data import DataLoader
-from dataset import customCVSDataSet
+from model.TRN.dataset import customCVSDataSet
 import torchvision
-import torch
-from transforms import GroupScale,GroupCenterCrop,Stack,ToTorchFormatTensor,GroupNormalize
+from model.TRN.transforms import GroupScale,GroupCenterCrop,Stack,ToTorchFormatTensor,GroupNormalize
 
 def get_dataloader( sysparas ):
 

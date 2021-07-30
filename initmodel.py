@@ -98,6 +98,7 @@ def get_model( sysparas ):
                     img_feature_dim=img_feature_dim,
                     partial_bn=not no_partialbn)
 
+        #init dataloader
         sysparas = get_dataloader(sysparas)
 
         # init optimizer

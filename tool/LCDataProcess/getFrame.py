@@ -149,6 +149,7 @@ def extract_frame():
 import shutil
 
 from tool.LCDataProcess.LCJson2TRN import get_json_label
+from tool.readwrite import read_xls_rows
 
 def extracted_parkland_picture():
 
@@ -156,36 +157,75 @@ def extracted_parkland_picture():
     label_name_dict = get_json_label(extrcat_fps)
     picture_dir = "/home/withai/Pictures/LCFrame/100-1-2-8fps"
     videonamelist = os.listdir(picture_dir)
-    new_label_dict = {}
+
+    parkland_path = "/home/withai/Desktop/Parklands_3.xlsx"
+    xlsrows       = read_xls_rows(parkland_path)
+    parkland_sequnce = {}
+    # rows = int((len(xlsrows)-1)/2)
+    rows = len(xlsrows)
+    diffirent_sequnce = []
+    for rowid in range(1,rows):
+        # wsd_data = xlsrows[rowid*2+1]
+        # czx_data = xlsrows[rowid*2+2]
+        row_data = xlsrows[rowid]
+        if row_data[1] == row_data[2]:
+            parkland_sequnce[row_data[0]] = row_data[2]
+        else:
+            diffirent_sequnce.append( row_data[0])
+            print(row_data[0],row_data[1],row_data[2])
+
+
+    new_label_dict1 = {}
     for videoname in videonamelist:
         resident_id = videoname.split("_")[0].split("-")[-1]
         for videoname1 in label_name_dict.keys():
             if videoname1.__contains__(resident_id):
-                new_label_dict[videoname] = label_name_dict[videoname1]
+                new_label_dict1[videoname] = label_name_dict[videoname1]
             # print("")
 
-    extrcat_save_dir = "/home/withai/Desktop/extracted_lc_img_from_begin"
+    new_label_dict = {}
+    for videoname in parkland_sequnce.keys():
+        resident_id = videoname.split("-")[-1]
+        for videoname1 in new_label_dict1.keys():
+            if videoname1.__contains__(resident_id):
+                new_label_dict[videoname1] = new_label_dict1[videoname1]
+
+
+    extrcat_save_dir = "/home/withai/Desktop/extracted_img_4_parkland_100_1"
     if not os.path.exists(extrcat_save_dir):
         os.makedirs(extrcat_save_dir)
 
     # extract picture
-
+    videoid = 0
+    dont_have_AL_MCT = []
     for videoname in new_label_dict.keys():
-
-        saveImageFolder = os.path.join(extrcat_save_dir, videoname)
-        if not os.path.exists(saveImageFolder):
-            os.makedirs(saveImageFolder)
-        srcImageFolder = os.path.join(picture_dir, videoname)
+        videoid += 1
+        print(videoid,"/",len(new_label_dict.keys()))
 
         labelist = new_label_dict[videoname]
         if 2 in labelist:
             AL_indx = labelist.index(2)
         else:
             AL_indx = len(labelist)
-        MCT_indx = labelist.index(3)
+
+        if 3 in labelist:
+            MCT_indx = labelist.index(3)
+        else:
+            MCT_indx = len(labelist)
+
+        if MCT_indx == AL_indx:
+            dont_have_AL_MCT.append(videoname)
+            continue
+
+        # MCT_indx = labelist.index(3)
         extract_indx = min(AL_indx, MCT_indx)
-        start = 0  # max(0, extract_indx-10)
+        start =  max(0, extract_indx-10)
         end = extract_indx + 10
+
+        saveImageFolder = os.path.join(extrcat_save_dir, videoname)
+        if not os.path.exists(saveImageFolder):
+            os.makedirs(saveImageFolder)
+        srcImageFolder = os.path.join(picture_dir, videoname)
         for imgid in range(start, end):
 
             srcimgpth = "{}/{}_{:0>5}.jpg".format(srcImageFolder, srcImageFolder.split('/')[-1], imgid * 8)
@@ -193,6 +233,8 @@ def extracted_parkland_picture():
             if os.path.exists(srcimgpth):
                 shutil.copy(srcimgpth, saveimgpth)
 
+    for videoname in dont_have_AL_MCT:
+        print( videoname )
     # print("end")
 
 

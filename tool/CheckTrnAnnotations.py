@@ -3,9 +3,9 @@ import json
 import copy
 
 def CheckFileExist():
-    old_pth = "/home/withai/Desktop/LCLabelFiles/LCPhase_version2_len24_2_annotator.json"
-    imgdir = r"/home/withai/Pictures/LCFrame/LCTrainVal_189"
-    save_pth = r"/home/withai/Desktop/LCLabelFiles/LCPhase_version2_len24_2_annotator_checked.json"
+    old_pth = "/home/withai/Desktop/LCLabelFiles/LCPhase_version2_len8_fps8_2_annotator.json"
+    imgdir = r"/home/withai/Pictures/LCFrame/100-1-2-8fps"
+    save_pth = r"/home/withai/Desktop/LCLabelFiles/LCPhase_version2_len8_fps8_2_annotator_checked.json"
     with open(old_pth) as f:
         old_dict = json.load(f)
 
