@@ -60,9 +60,9 @@ import json
 from tool.readwrite import read_xls_rows
 
 
-def get_video_info():
+def get_video_info( savedir ):
 
-    savedir     = get_config('savedir')
+
     dir1        = os.path.join( get_config('nas_video_lc10000_path'),'CompleteVideo' )
     pth_list    = traversalDir(dir1, returnX='path')
     video_dict  = {}
@@ -104,45 +104,47 @@ video_path ={
 
 
 
-def extract_frame():
-
-    for videoname in video_path.keys():
-        path = os.path.join( "/mnt/video/LC10000/CompleteVideo/", video_path[videoname] )
-        vid = imageio.get_reader(path, 'ffmpeg')
-        metaData = vid.get_meta_data()
-        print(videoname,metaData)
-
-    get_video_info()
-
-    nas_video_path = get_config("nas_video_path")
-    pth_list    = traversalDir(nas_video_path, returnX='path')
-    video_dict  = {}
-    appendlist  = []
-    for pth in pth_list:
-        if not pth.__contains__('ORIGIN'):
-            continue
-        appendx = pth.split('.')[-1]
-        if appendx == "mp4" or appendx == "MP4":
-            videoname = pth.split('/')[-1].split('.')[0]
-            if videoname in video_dict.keys():
-                print(videoname,pth,video_dict[videoname])
-            else:
-                video_dict[videoname] = pth
-
-    # savepth = "/home/withai/Desktop/videopth.json"
-    # with open(savepth,'w') as f:
-    #     json.dump(video_dict,f)
-    videolist_xls = get_config("videolist_xls")
-
-    videos     = read_xls_rows(videolist_xls)
-    videopaths = []
-    for video in videos:
-        videoname = video[0]
-        if videoname in video_dict.keys():
-            videopaths.append( video_dict[videoname] )
-
-    savedir = get_config("savedir")
-    extract_frame( videopaths, savedir)
+# def extract_frame():
+#
+#     for videoname in video_path.keys():
+#         path = os.path.join( "/mnt/video/LC10000/CompleteVideo/", video_path[videoname] )
+#         vid = imageio.get_reader(path, 'ffmpeg')
+#         metaData = vid.get_meta_data()
+#         print(videoname,metaData)
+#
+#     savedir = get_config('savedir')
+#
+#     get_video_info( savedir )
+#
+#     nas_video_path = get_config("nas_video_path")
+#     pth_list    = traversalDir(nas_video_path, returnX='path')
+#     video_dict  = {}
+#     appendlist  = []
+#     for pth in pth_list:
+#         if not pth.__contains__('ORIGIN'):
+#             continue
+#         appendx = pth.split('.')[-1]
+#         if appendx == "mp4" or appendx == "MP4":
+#             videoname = pth.split('/')[-1].split('.')[0]
+#             if videoname in video_dict.keys():
+#                 print(videoname,pth,video_dict[videoname])
+#             else:
+#                 video_dict[videoname] = pth
+#
+#     # savepth = "/home/withai/Desktop/videopth.json"
+#     # with open(savepth,'w') as f:
+#     #     json.dump(video_dict,f)
+#     videolist_xls = get_config("videolist_xls")
+#
+#     videos     = read_xls_rows(videolist_xls)
+#     videopaths = []
+#     for video in videos:
+#         videoname = video[0]
+#         if videoname in video_dict.keys():
+#             videopaths.append( video_dict[videoname] )
+#
+#     savedir = get_config("savedir")
+#     extract_frame( videopaths, savedir)
 
 
 
@@ -238,8 +240,88 @@ def extracted_parkland_picture():
     # print("end")
 
 
+def get_append_video_list():
+
+    path    = "/home/withai/Desktop/videolist_8_3_wsd.xlsx"
+    xlsdata1 = read_xls_rows(path)
+
+    path    = "/home/withai/Desktop/videolist_8_3_wsd.xlsx"
+    xlsdata2 = read_xls_rows(path,1)
+
+    path    = "/home/withai/Desktop/videolist_8_3_wsd.xlsx"
+    xlsdata3 = read_xls_rows(path,2)
+
+    exist_data = "/home/withai/Pictures/LCFrame/100-1-2-8fps"
+    exist_videos1 = os.listdir(exist_data)
+
+    exist_data = "/home/withai/Pictures/LCFrame/append_video-8fps"
+    exist_videos2 = os.listdir(exist_data)
+
+    exist_videos = exist_videos1 + exist_videos2
+
+    xlsdata = xlsdata1 + xlsdata2 + xlsdata3
+    not_find_list = []
+    find_videos = {}
+    for rowdata in xlsdata:
+        resident_id = rowdata[0].split("-")[-1]
+        find = False
+        if rowdata[0] in find_videos.keys():
+            print( rowdata[0],"?")
+        for video1 in exist_videos:
+            if video1.__contains__(resident_id):
+                find = True
+                find_videos[rowdata[0]] = video1
+                break
+
+        if not find:
+            not_find_list.append(rowdata[0])
+
+    nas_video_path = get_config("nas_video_path")
+    pth_list    = traversalDir(nas_video_path, returnX='path')
+    info_data   = {}
+    appendlist  = []
+    for pth in pth_list:
+        if not pth.__contains__('ORIGIN'):
+            continue
+        appendx = pth.split('.')[-1]
+        if appendx == "mp4" or appendx == "MP4":
+            videoname = pth.split('/')[-1].split('.')[0]
+            if videoname in info_data.keys():
+                print(videoname,pth,info_data[videoname])
+            else:
+                info_data[videoname] = pth
+
+    video_list_4_extracted = []
+    for video1 in not_find_list:
+        resident_id = video1.split("-")[-1]
+        find = False
+        for video2 in info_data.keys():
+            if video2.__contains__(resident_id):
+                video_list_4_extracted.append( info_data[video2] )
+                find = True
+                break
+
+        if not find:
+            print(video1)
+
+    return video_list_4_extracted
+
+def extracted_append_video():
+
+    savedir    = get_config("savedir")
+    # videopaths = get_append_video_list()
+
+    videopaths = [
+        "/mnt/video/LC10000/CompleteVideo/hospital_id=10/surgery_id=1408/video/20210420-LC-PZHH-0000109665_ORIGIN.mp4"
+    ]
+
+    extract_frame( videopaths, savedir)
+
 if __name__ == "__main__":
 
-    extracted_parkland_picture()
+
+    # extracted_parkland_picture()
+
+    extracted_append_video()
 
     print("end")

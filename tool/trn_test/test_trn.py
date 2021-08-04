@@ -25,8 +25,8 @@ def main():
     rule = 'phase'
 
     dirImage   = '/home/withai/Pictures/LCFrame/100-1-2-8fps'
-    pathJson   = '/home/withai/Desktop/LCLabelFiles/LCPhase_version2_len8_fps8_2_annotator_checked.json'
-    recordJson = "/home/withai/Desktop/LCLabelFiles/LCPhase_4action_len8_fs8_version2_result.json"
+    pathJson   = '/home/withai/Desktop/LCLabelFiles/LCPhase_version1_len8_2_annotator_checked.json'
+    recordJson = "/home/withai/Desktop/LCLabelFiles/LCPhase_4action_len8_fs8_version1_valid_result.json"
 
     categories = dictCategories[rule]
     num_class  = len(categories)
@@ -79,14 +79,14 @@ def main():
     val_loader = torch.utils.data.DataLoader(
         customCVSDataSet(dirImage,
                          pathJson,
-                         'test', rule, torchvision.transforms.Compose([
+                         'valid', rule, torchvision.transforms.Compose([
                 GroupScale(int(scale_size)),
                 GroupCenterCrop(crop_size),
                 Stack(roll=(args.arch in ['BNInception', 'InceptionV3'])),
                 ToTorchFormatTensor(div=(args.arch not in ['BNInception', 'InceptionV3'])),
                 normalize,
             ]), args.num_segments, dictCategories[rule]),
-        batch_size=2, shuffle=False,
+        batch_size=8, shuffle=False,
         num_workers=32, pin_memory=True)
 
     # define loss function (criterion) and optimizer

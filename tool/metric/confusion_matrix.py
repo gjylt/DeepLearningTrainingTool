@@ -93,7 +93,7 @@ def compute_ap(recall, precision):
 import json
 def confusematrix():
 
-    pth = "/home/withai/Desktop/LCLabelFiles/LCPhase6Test_len24_version2_withou_LSH_result.json"
+    pth = "/home/withai/Desktop/LCLabelFiles/LCPhase_4action_len8_fs8_version1_valid_result.json"
     with open(pth,'r') as f:
         data = json.load(f)
 
@@ -125,7 +125,7 @@ def confusematrix():
 
     print(class_dic)
 
-    classNum       = 7
+    classNum       = 5
     matrix = np.zeros((classNum, classNum))
     for i in range(len(sequenceLabel)):
       matrix[sequenceResult[i], sequenceLabel[i]] += 1

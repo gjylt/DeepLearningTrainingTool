@@ -131,6 +131,7 @@ def generate_label():
             print(videoname,'not found')
 
 
+    #generate label
     videoidx  = 0
     label_fps = 8  #extract_fps should be exact divided by label_fps
     for phase in train_dict.keys():
@@ -243,28 +244,32 @@ def get_json_label(extract_fps):
     filelist1   = os.listdir(pth1)
     filelist2   = os.listdir(pth2)
 
-    pth = "/home/withai/Desktop/LCLabelFiles/videopth_info_.json"
-    with open(pth) as f:
-        data = json.load(f)
+    #get video information
+    videoinfopth = "/home/withai/Desktop/LCLabelFiles/videopth_info_.json"
+    video_info   = {}
+    if os.path.exists(videoinfopth):
+        with open(videoinfopth) as f:
+            video_info = json.load(f)
+    else:
 
-    # for videoname in video_path.keys():
-    #
-    #     try:
-    #         pth = video_path[videoname]
-    #         vid = imageio.get_reader(pth, 'ffmpeg')
-    #         metaData = vid.get_meta_data()
-    #         fps = metaData['fps']
-    #         duration = metaData['duration']
-    #         data[videoname] = {}
-    #         data[videoname]['path'] = pth
-    #         data[videoname]['fps'] = fps
-    #         data[videoname]['duration'] = duration
-    #     except:
-    #         print(videoname, "faild read video info")
-    #
-    # pth = "/home/withai/Desktop/videopth_info_.json"
-    # with open(pth,'w') as f:
-    #     json.dump(data,f)
+
+        for videoname in video_path.keys():
+
+            try:
+                pth = video_path[videoname]
+                vid = imageio.get_reader(pth, 'ffmpeg')
+                metaData = vid.get_meta_data()
+                fps = metaData['fps']
+                duration = metaData['duration']
+                video_info[videoname] = {}
+                video_info[videoname]['path'] = pth
+                video_info[videoname]['fps']  = fps
+                video_info[videoname]['duration'] = duration
+            except:
+                print(videoname, "faild read video info")
+
+        with open(videoinfopth,'w') as f:
+            json.dump(video_info,f)
 
     #find out the videos both in two directory
     videolist     = []
@@ -280,9 +285,9 @@ def get_json_label(extract_fps):
         videoname = videoname.split('.')[0]
         surgid    = videoname.split('-')[-1]
         find = False
-        for videoname1 in data.keys():
+        for videoname1 in video_info.keys():
             if videoname1.__contains__(surgid) or videoname.__contains__(videoname1):
-                read_dict[videoname] = data[videoname1]
+                read_dict[videoname] = video_info[videoname1]
                 find = True
                 break
         if not find:
@@ -414,20 +419,8 @@ def visualize_lable_different():
     with open(savepth,"w") as f:
         json.dump(compare_dict, f)
 
-
 if __name__ == "__main__":
 
-    # path = "/home/withai/Desktop/LCLabelFiles/LCPhase_version1_len8_2_annotator.json"
-    # with open(path) as f:
-    #     data = json.load(f)
-
-
     generate_label()
-
-    # get_json_file()
-
-    # extracted_parkland_picture()
-
-
 
     print("end")

@@ -3,9 +3,9 @@ import json
 from   tool.readXML import readXML
 import os
 
-def read_xls_rows(pth):
+def read_xls_rows(pth,pageidx = 0):
     workbook = xlrd.open_workbook(pth)
-    sheet1_object = workbook.sheet_by_index(0)
+    sheet1_object = workbook.sheet_by_index( pageidx )
     nrows    = sheet1_object.nrows
 
     row_list = []
