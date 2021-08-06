@@ -65,14 +65,24 @@ def get_video_info( savedir ):
 
     dir1        = os.path.join( get_config('nas_video_lc10000_path'),'CompleteVideo' )
     pth_list    = traversalDir(dir1, returnX='path')
+
+    pth_list = [pth for pth in pth_list if pth.__contains__("ORIGIN") and (pth.endswith("mp4") or pth.endswith("MP4")) ]
     video_dict  = {}
 
+    oldpath = "/home/withai/Desktop/LCLabelFiles/videopth_info_.json"
+    with open(oldpath) as f:
+        video_dict = json.load(f)
+
+    jump_num = 0
+    read_fail_num = 0
     for pth in pth_list:
         appendx = pth.split('.')[-1]
         if appendx == "mp4" or appendx == "MP4":
             videoname = pth.split('/')[-1].split('.')[0]
             if videoname in video_dict.keys():
-                print(videoname,pth,video_dict[videoname])
+                jump_num += 1
+                continue
+                # print(videoname,pth,video_dict[videoname])
             else:
                 try:
                     vid = imageio.get_reader(pth, 'ffmpeg')
@@ -84,11 +94,17 @@ def get_video_info( savedir ):
                     video_dict[videoname]['fps']  = fps
                     video_dict[videoname]['duration'] = duration
                 except:
+                    read_fail_num += 1
                     print(videoname,"faild read video info")
+
+    print("already exist video:", jump_num)
+    print("read fail video:", read_fail_num)
 
     savepth = os.path.join( savedir, "videopth_info.json" )
     with open(savepth,'w') as f:
         json.dump(video_dict,f)
+
+    return video_dict
 
 
 video_path ={
@@ -155,12 +171,16 @@ from tool.readwrite import read_xls_rows
 
 def extracted_parkland_picture():
 
+
+    extrcat_save_dir = "/home/withai/Desktop/extracted_img_4_parkland_100_1"
+
     extrcat_fps = 1
-    label_name_dict = get_json_label(extrcat_fps)
+    pth1, pth2, videoinfopth, videolist
+    label_name_dict = get_json_label(extrcat_fps, pth1,pth2, videoinfopth, videolist)
     picture_dir = "/home/withai/Pictures/LCFrame/100-1-2-8fps"
     videonamelist = os.listdir(picture_dir)
 
-    parkland_path = "/home/withai/Desktop/Parklands_3.xlsx"
+    parkland_path = "/home/withai/Desktop/LCLabelFiles/Parklands.xlsx"
     xlsrows       = read_xls_rows(parkland_path)
     parkland_sequnce = {}
     # rows = int((len(xlsrows)-1)/2)
@@ -193,7 +213,7 @@ def extracted_parkland_picture():
                 new_label_dict[videoname1] = new_label_dict1[videoname1]
 
 
-    extrcat_save_dir = "/home/withai/Desktop/extracted_img_4_parkland_100_1"
+
     if not os.path.exists(extrcat_save_dir):
         os.makedirs(extrcat_save_dir)
 
@@ -320,8 +340,10 @@ def extracted_append_video():
 if __name__ == "__main__":
 
 
-    # extracted_parkland_picture()
+    extracted_parkland_picture()
 
-    extracted_append_video()
+    # extracted_append_video()
+    savedir = "/home/withai/Desktop/"
+    get_video_info(savedir)
 
     print("end")

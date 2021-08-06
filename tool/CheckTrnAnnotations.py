@@ -3,9 +3,9 @@ import json
 import copy
 
 def CheckFileExist():
-    old_pth = "/home/withai/Desktop/LCLabelFiles/LCPhase_version1_len8_2_annotator.json"
+    old_pth = "/home/withai/Desktop/LCLabelFiles/LCPhase_version1_len24_2_annotator.json"
     imgdir = r"/home/withai/Pictures/LCFrame/100-1-2-8fps"
-    save_pth = r"/home/withai/Desktop/LCLabelFiles/LCPhase_version1_len8_2_annotator_checked.json"
+    save_pth = r"/home/withai/Desktop/LCLabelFiles/LCPhase_version1_len24_2_annotator_checked.json"
     with open(old_pth) as f:
         old_dict = json.load(f)
 
@@ -95,13 +95,13 @@ def StatisticData():
 
 def modify_error():
 
-    old_pth = r"G:\DataSet\LCPhase\LCPhaseTest200V1_action_len8_fps8.json"
-    save_pth = r"G:\DataSet\LCPhase\LCPhaseTest200V1_action_len8_fps8_new2.json"
+    old_pth = r"/home/withai/Desktop/LCLabelFiles/LCPhase_version1_len24_2_annotator.json"
+    save_pth = r"/home/withai/Desktop/LCLabelFiles/LCPhase_version1_len24_2_annotator_checked.json"
     with open(old_pth) as f:
         old_dict = json.load(f)
 
 
-    dir_pth = r"G:\DataSet\LCPhase\20-8-test"
+    dir_pth = r"/home/withai/Pictures/LCFrame/100-1-2-8fps"
     dirlist = os.listdir(dir_pth)
 
     new_dict = {}

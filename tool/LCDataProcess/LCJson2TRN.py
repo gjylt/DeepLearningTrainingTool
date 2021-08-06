@@ -67,6 +67,238 @@ listUse = ["bg",
            ]
 
 
+
+
+def get_videolist_of_dataset( test_data ,phase):
+
+    test_video_list = []
+    video_data_dict = {}
+
+    for labelid in test_data["phase"][phase].keys():
+
+        for sequnce in test_data["phase"][phase][labelid]:
+
+            videoname =  os.path.split(sequnce[0])[0]
+
+            if videoname not in test_video_list:
+                test_video_list.append(videoname)
+
+            if videoname not in video_data_dict.keys():
+                video_data_dict[videoname]={}
+            if int(labelid) not in video_data_dict[videoname].keys():
+                video_data_dict[videoname][ int(labelid) ] = []
+
+            video_data_dict[videoname][ int(labelid) ].append(sequnce)
+
+
+
+    return test_video_list,video_data_dict
+
+def get_find_not_find_video(xlsdata_train, total_list_old):
+    find_dict = {}
+    not_find_dict = []
+    for videonew in xlsdata_train:
+        video_id = videonew[0].split('-')[-1]
+        find = False
+        for videold in total_list_old:
+            if videold.__contains__(video_id):
+                find = True
+                find_dict[videonew[0]] = videold
+                break
+
+        if not find:
+            not_find_dict.append(videonew[0])
+
+    return find_dict,not_find_dict
+
+
+def generate_train_sequnce(label_name_dict , train_list, valid_list, test_list ):
+
+
+    savePath           = "/home/withai/Desktop/LCLabelFiles/LCPhase_version2_len8_fps8_2_annotator.json"
+    savePath_statistic = "/home/withai/Desktop/LCLabelFiles/LCPhase_version2_len8_fps8_2_annotator_statistic.json"
+    extract_fps        = 8
+    label_fps          = 1  # extract_fps should be exact divided by label_fps
+    sequence_len       = 24
+    cc                 = 0
+    dictOut            = {"phase": {}}
+    dictOut_statistic  = {"phase": {}}
+    new_train_dict = {
+        "train":{},
+        "valid":{},
+        "test":{}
+    }
+
+    #split labels to train,vaild,test
+    for videoname in label_name_dict.keys():
+        resident_id = videoname.split('-')[-1]
+        find = False
+
+        for videoname1 in train_list:
+            resident_id = videoname1.split("_")[0].split("-")[-1]
+            if videoname.__contains__(resident_id):
+                new_train_dict["train"][videoname1] = label_name_dict[videoname]
+                find = True
+                break
+        #
+        for videoname1 in valid_list:
+            resident_id = videoname1.split("_")[0].split("-")[-1]
+            if videoname.__contains__(resident_id):
+                new_train_dict["valid"][videoname1] = label_name_dict[videoname]
+                find = True
+                break
+
+        for videoname1 in test_list:
+            resident_id = videoname1.split("_")[0].split("-")[-1]
+            if videoname.__contains__(resident_id):
+                new_train_dict["test"][videoname1] = label_name_dict[videoname]
+                find = True
+                break
+
+        if not find:
+            print(videoname,'not found')
+
+
+
+    #generate label sequnce
+    videoidx  = 0
+
+    cc        = 0
+    for phase in new_train_dict.keys():
+
+        if phase not in dictOut['phase'].keys():
+            dictOut['phase'][phase] = {}
+            dictOut_statistic['phase'][phase] = {}
+
+        for videoname in new_train_dict[phase].keys():
+
+            print( videoidx,"/", len( new_train_dict["valid"].keys()) + len( new_train_dict["train"].keys()) + len( new_train_dict["test"].keys()))
+            videoidx += 1
+
+            listMsg = new_train_dict[phase][videoname]
+            i_start = 0
+            i_end   = max(int( len(listMsg)*label_fps/extract_fps )-sequence_len,0)
+            i_step  = 1
+            transform_ration = extract_fps/label_fps
+            max_extract_len  = len(listMsg)
+
+            for i in range( i_start, i_end, i_step):
+
+                indx  = min(  int((i+sequence_len-1)*transform_ration), max_extract_len)
+                label = listMsg[ indx ]
+                if label == -1:
+                    cc+=1
+                    continue
+
+                FindDiffirend = False
+                sequence2 = []
+                sequence  = []
+                for idx in np.arange( i, i+sequence_len, 1 ):
+
+                    indx     = min( int((idx) * transform_ration) , max_extract_len)
+                    curlabel = listMsg[indx]
+
+                    if curlabel != label:
+                        FindDiffirend = True
+                        break
+
+                    subpath = "{}/{}_{:0>5}.jpg".format(videoname, videoname, indx )
+
+                    sequence.append(subpath)
+                    sequence2.append( [subpath, curlabel] )
+
+                if FindDiffirend:
+                    continue
+
+                if label not in dictOut['phase'][phase]:
+                    dictOut['phase'][phase][label] = []
+                    dictOut_statistic['phase'][phase][label] = []
+
+                if sequence not in dictOut['phase'][phase][label]:
+                    dictOut['phase'][phase][label].append(sequence)
+                    dictOut_statistic['phase'][phase][label].append(sequence2)
+
+
+    return dictOut,dictOut_statistic
+
+
+
+def merge_data( dictOut, append_dict ,phase):
+
+    for videoname in append_dict.keys():
+        for labelid in append_dict[videoname].keys():
+
+            if labelid not in dictOut["phase"][ phase].keys():
+                dictOut["phase"][ phase][labelid] = []
+            # print( len(dictOut["phase"]["test"][labelid]), len(test_dict[videoname][labelid]) )
+            dictOut["phase"][phase][labelid].extend( append_dict[videoname][labelid] )
+            # print( len(dictOut["phase"]["test"][labelid]) )
+
+    return  dictOut
+
+def get_video_list():
+
+    path    = "/home/withai/Desktop/videolist_8_3_wsd.xlsx"
+    xlsdata_train = read_xls_rows(path)
+
+    path    = "/home/withai/Desktop/videolist_8_3_wsd.xlsx"
+    xlsdata_valid = read_xls_rows(path,1)
+
+    path    = "/home/withai/Desktop/videolist_8_3_wsd.xlsx"
+    xlsdata_test = read_xls_rows(path,2)
+
+    #load old train val data sequnce
+    old_test_json = "/home/withai/Desktop/LCLabelFiles/LCPhase_version1_len24_2_annotator_checked.json"
+    with open( old_test_json) as f:
+        train_val_data = json.load(f)
+
+    #load old test data sequnce
+    old_test_json = "/home/withai/Desktop/LCLabelFiles/LCPhase_version2_len24_2_annotator_checked.json"
+    with open( old_test_json) as f:
+        test_data = json.load(f)
+
+    #get old test video list
+    test_video_list,  test_dict  = get_videolist_of_dataset( test_data,      "test" )
+    train_video_list, train_dict = get_videolist_of_dataset( train_val_data, "train")
+    valid_video_list, valid_dict = get_videolist_of_dataset( train_val_data, "valid")
+
+    # train_set = set(train_video_list)
+    # valid_set = set(valid_video_list)
+    # test_set  = set(test_video_list)
+    # train_val  = train_set&valid_set
+    # train_test = train_set&test_set
+    # val_test   = valid_set&test_set
+
+    total_list_old = train_video_list + valid_video_list + test_video_list
+
+    find_dict_train,not_find_dict_train  = get_find_not_find_video(xlsdata_train, total_list_old)
+    find_dict_valid, not_find_dict_valid = get_find_not_find_video(xlsdata_valid, total_list_old)
+    find_dict_test, not_find_dict_test   = get_find_not_find_video(xlsdata_test, total_list_old)
+
+    videoinfopth = "/home/withai/Desktop/LCLabelFiles/videopth_info.json"
+    path1 = "/home/withai/Desktop/LCLabelFiles/phase_specialevents/phases/35"
+    phase_list1 = os.listdir(path1)
+
+    path2 = "/home/withai/Desktop/LCLabelFiles/phase_specialevents/phases/36"
+    phase_list2 = os.listdir(path2)
+    extract_fps = 8
+    video_list = not_find_dict_test + not_find_dict_valid + not_find_dict_train
+    label_name_dict = get_json_label(extract_fps, path1, path2, videoinfopth, video_list)
+
+    dictOut,dictOut_statistic = generate_train_sequnce(label_name_dict, not_find_dict_train, not_find_dict_valid, not_find_dict_test)
+
+    dictOut = merge_data(dictOut, test_dict, "test"  )
+    dictOut = merge_data(dictOut, train_dict, "train")
+    dictOut = merge_data(dictOut, valid_dict, "valid")
+
+    savePath = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_checked.json"
+    with open(savePath, 'w', encoding='utf-8') as f:
+        json.dump(dictOut, f, ensure_ascii=False, indent=2)
+        f.close()
+
+
+
+
 def generate_label():
 
     version1_train_val_split_path = "/home/withai/Desktop/LCLabelFiles/videoname_phase_list_100-1.json"
@@ -95,13 +327,17 @@ def generate_label():
     cc                 = 0
     dictOut            = {"phase": {}}
     dictOut_statistic  = {"phase": {}}
-    label_nane_dict    = get_json_label( extract_fps )
     train_dict = {
         "train":{},
         "valid":{},
         "test":{}
     }
 
+    #get label
+    label_nane_dict    = get_json_label( extract_fps )
+
+
+    #split labels to train,vaild,test
     for videoname in label_nane_dict.keys():
         resident_id = videoname.split('-')[-1]
         find = False
@@ -130,8 +366,7 @@ def generate_label():
         if not find:
             print(videoname,'not found')
 
-
-    #generate label
+    #generate label sequnce
     videoidx  = 0
     label_fps = 8  #extract_fps should be exact divided by label_fps
     for phase in train_dict.keys():
@@ -188,6 +423,7 @@ def generate_label():
                     dictOut['phase'][phase][label].append(sequence)
                     dictOut_statistic['phase'][phase][label].append(sequence2)
 
+    #save label as json file
     print(cc)
     print('write in')
     with open(savePath, 'w', encoding='utf-8') as f:
@@ -237,21 +473,47 @@ lable_dict = {'建立气腹':1,
               "清理术野":6}
 
 
-def get_json_label(extract_fps):
-    pth1 = "/home/withai/Desktop/phase-100-1/100-1/100-1/CZX"
-    pth2 = "/home/withai/Desktop/phase-100-1/100-1/100-1/WSD"
+
+def get_video_info():
+
+    dir = ""
+    traversalDir()
+
+    video_info = {}
+    for videoname in video_path.keys():
+
+        try:
+            pth = video_path[videoname]
+            vid = imageio.get_reader(pth, 'ffmpeg')
+            metaData = vid.get_meta_data()
+            fps = metaData['fps']
+            duration = metaData['duration']
+            video_info[videoname] = {}
+            video_info[videoname]['path'] = pth
+            video_info[videoname]['fps']  = fps
+            video_info[videoname]['duration'] = duration
+        except:
+            print(videoname, "faild read video info")
+
+    videoinfopth = "/home/withai/Desktop/LCLabelFiles/videopth_info_.json"
+    with open(videoinfopth, 'w') as f:
+        json.dump(video_info, f)
+
+
+def get_json_label(extract_fps, pth1,pth2, videoinfopth, videolist):
+    # pth1 = "/home/withai/Desktop/phase-100-1/100-1/100-1/CZX"
+    # pth2 = "/home/withai/Desktop/phase-100-1/100-1/100-1/WSD"
     # extract_fps = 8
     filelist1   = os.listdir(pth1)
     filelist2   = os.listdir(pth2)
 
     #get video information
-    videoinfopth = "/home/withai/Desktop/LCLabelFiles/videopth_info_.json"
+    # videoinfopth = "/mnt/FileExchange/withai/project/LC阶段识别/videopth_info_update_2021_8_4.json"
     video_info   = {}
     if os.path.exists(videoinfopth):
         with open(videoinfopth) as f:
             video_info = json.load(f)
     else:
-
 
         for videoname in video_path.keys():
 
@@ -259,7 +521,7 @@ def get_json_label(extract_fps):
                 pth = video_path[videoname]
                 vid = imageio.get_reader(pth, 'ffmpeg')
                 metaData = vid.get_meta_data()
-                fps = metaData['fps']
+                fps      = metaData['fps']
                 duration = metaData['duration']
                 video_info[videoname] = {}
                 video_info[videoname]['path'] = pth
@@ -272,12 +534,12 @@ def get_json_label(extract_fps):
             json.dump(video_info,f)
 
     #find out the videos both in two directory
-    videolist     = []
-    filenamelist1 = os.listdir(pth1)
-    filenamelist2 = os.listdir(pth2)
-    for filename in filenamelist1:
-        if filename in filenamelist2:
-            videolist.append(filename)
+    # videolist     = []
+    # filenamelist1 = os.listdir(pth1)
+    # filenamelist2 = os.listdir(pth2)
+    # for filename in filenamelist1:
+    #     if filename in filenamelist2:
+    #         videolist.append(filename)
 
     #remaind the video name exist video infomation
     read_dict = {}
@@ -419,8 +681,119 @@ def visualize_lable_different():
     with open(savepth,"w") as f:
         json.dump(compare_dict, f)
 
-if __name__ == "__main__":
 
-    generate_label()
+def get_append_video():
+
+    train_val_txt = "/home/withai/Desktop/train_val.txt"
+    with open(train_val_txt) as f:
+        video_list = f.readlines()
+
+
+    path    = "/home/withai/Desktop/videolist_8_3_wsd.xlsx"
+    xlsdata_train = read_xls_rows(path)
+
+    path    = "/home/withai/Desktop/videolist_8_3_wsd.xlsx"
+    xlsdata_valid = read_xls_rows(path,1)
+
+    path    = "/home/withai/Desktop/videolist_8_3_wsd.xlsx"
+    xlsdata_test = read_xls_rows(path,2)
+
+    video_list_train_val = xlsdata_valid + xlsdata_train
+
+    not_find_list = []
+    find_list     = []
+    for video in video_list_train_val:
+        resident_id = video[0].split("-")[-1]
+        find = False
+        for videoexist in video_list:
+            if videoexist.__contains__(resident_id) :
+                find_list.append(video[0])
+                find = True
+                break
+        if not find:
+            not_find_list.append(video[0])
+
+
+    video_dir1 = "/home/withai/Pictures/LCFrame/100-1-2-8fps"
+    video_dir_list1 = os.listdir(video_dir1)
+
+    video_dir2      = "/home/withai/Pictures/LCFrame/append_video-8fps"
+    video_dir_list2 = os.listdir(video_dir2)
+
+    video_not_find_dict = {}
+    for video in not_find_list:
+        resident_id = video.split("-")[-1]
+        for video1 in video_dir_list1:
+            if video1.__contains__(resident_id):
+                if video not in video_not_find_dict.keys():
+                    video_not_find_dict[video] = [ os.path.join(video_dir1,video1)]
+                else:
+                    video_not_find_dict[video].append( os.path.join(video_dir1, video1))
+
+
+    for video in not_find_list:
+        resident_id = video.split("-")[-1]
+        for video1 in video_dir_list2:
+            if video1.__contains__(resident_id):
+                if video not in video_not_find_dict.keys():
+                    video_not_find_dict[video] = [ os.path.join(video_dir2,video1)]
+                else:
+                    video_not_find_dict[video].append( os.path.join(video_dir2, video1))
+
+    # for videoname in video_not_find_dict.keys():
+
+    save_dir = "/home/withai/Pictures/LCFrame/video_append"
+    if not os.path.exists(save_dir):
+        os.makedirs(save_dir)
+
+    for video in video_not_find_dict.keys():
+
+        srcpth = video_not_find_dict[video][0]
+        videoname = os.path.split(srcpth)[-1]
+        despth = os.path.join( save_dir,videoname)
+        if os.path.exists(despth):
+            continue
+
+        cmd = "cp -r "+srcpth+" "+despth
+        os.system( cmd )
+
+
+
+
+    print("end")
+
+
+
+
+def re_create():
+    path = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_checked.json"
+    with open(path) as f:
+        ori_data = json.load(f)
+
+    save_path = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_train_val.json"
+    phse_list = ["train", "valid"]
+    new_dict = {
+        "phase":{
+
+        }
+    }
+    for phase in ori_data["phase"].keys():
+        if phase in phse_list:
+            new_dict["phase"][phase] = ori_data["phase"][phase]
+
+
+    with open(save_path,"w") as f:
+        json.dump(new_dict,f)
+
+
+
+
+if __name__ == "__main__":
+    # get_video_list()
+
+    get_append_video()
+
+    # re_create()
+    # generate_label()
 
     print("end")
