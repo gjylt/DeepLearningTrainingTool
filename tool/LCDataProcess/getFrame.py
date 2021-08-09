@@ -169,13 +169,195 @@ import shutil
 from tool.LCDataProcess.LCJson2TRN import get_json_label
 from tool.readwrite import read_xls_rows
 
+
+def genearate_parkland_train_label():
+
+
+    save_json_path = "/Users/guan/Desktop/parkland_train_val_test.json"
+    used_video_json_path = "/Users/guan/Desktop/used_video.json"
+    # with open( save_json_path) as f:
+    #     data = json.load(f)
+
+    extrcat_fps  = 1
+    pth1         = "/Users/guan/Desktop/phase_specialevents_parkland/phase_specialevents_parkland/phases/35"
+    pth2         = "/Users/guan/Desktop/phase_specialevents_parkland/phase_specialevents_parkland/phases/36"
+    videoinfopth = "/Users/guan/Desktop/document/medical/项目/LC/8月LC实验/8月LC/videopth_info.json"
+
+    parkland_path = "/Users/guan/Desktop/document/medical/项目/LC/8月LC实验/8月LC/videolist_8_3_wsd.xlsx"
+    train_list    = [pth[0] for pth in read_xls_rows(parkland_path) ]
+    valid_list    = [pth[0] for pth in read_xls_rows(parkland_path,1) ]
+    test_list     = [pth[0] for pth in read_xls_rows(parkland_path, 2)]
+    videolist     = train_list + valid_list + test_list
+
+    label_name_dict = get_json_label(extrcat_fps, pth1,pth2, videoinfopth, videolist)
+
+    parkland_label = "/Users/guan/Desktop/phase_specialevents_parkland/phase_specialevents_parkland/parkland/Parklands_label.xlsx"
+    xlsrows = read_xls_rows( parkland_label )
+
+
+    parkland_sequnce = {}
+    # rows = int((len(xlsrows)-1)/2)
+    rows = len(xlsrows)
+    diffirent_sequnce = []
+    for rowid in range(1,rows):
+        # wsd_data = xlsrows[rowid*2+1]
+        # czx_data = xlsrows[rowid*2+2]
+        row_data = xlsrows[rowid]
+        if row_data[1] == row_data[2]:
+            parkland_sequnce[row_data[0]] = row_data[2]
+        else:
+            diffirent_sequnce.append( row_data[0])
+            print(row_data[0],row_data[1],row_data[2])
+
+    txt_path = "/Users/guan/Desktop/trai_val.txt"
+    with open(txt_path) as f:
+        extract_video_list = f.readlines()
+
+    new_label_dict1 = {}
+    for videoname in parkland_sequnce.keys():
+        resident_id = videoname.split("-")[-1]
+        for videoname1 in label_name_dict.keys():
+            if videoname1.__contains__(resident_id):
+                new_label_dict1[videoname1] = label_name_dict[videoname1]
+
+    new_label_dict = {}
+    label_parkland_video_dict ={}
+    for videoname in new_label_dict1.keys():
+        resident_id = videoname.split("-")[-1]
+        for videoname1 in extract_video_list:
+            if videoname1.__contains__(resident_id):
+                videoname1 = videoname1.replace("\n","")
+                new_label_dict[videoname1] = new_label_dict1[videoname]
+                label_parkland_video_dict[videoname1] = videoname
+
+
+
+    # extract picture
+    videoid = 0
+    dont_have_AL_MCT = []
+
+    parkland_train_val_dict = {
+        "phase":{
+
+        }
+    }
+
+    train_val_img_list_path = "/Users/guan/Desktop/train_valid_data.json"
+    with open(train_val_img_list_path) as f:
+        train_val_img_list = json.load(f)
+
+    used_video = {}
+    for videoname in new_label_dict.keys():
+
+        picture_list = train_val_img_list[videoname]
+
+        if videoname not in label_parkland_video_dict.keys():
+            continue
+
+        if label_parkland_video_dict[videoname] not in parkland_sequnce.keys():
+            continue
+
+        parkland_id = int(parkland_sequnce[ label_parkland_video_dict[videoname] ])
+
+        videoid += 1
+        print(videoid,"/",len(new_label_dict.keys()))
+
+        phase = ""
+        for videoinlist in train_list:
+            resident_id = videoinlist.split("-")[-1]
+            if videoname.__contains__(resident_id):
+                phase = "train"
+                break
+
+        for videoinlist in valid_list:
+            resident_id = videoinlist.split("-")[-1]
+            if videoname.__contains__(resident_id):
+                phase = "valid"
+                break
+
+        for videoinlist in test_list:
+            resident_id = videoinlist.split("-")[-1]
+            if videoname.__contains__(resident_id):
+                phase = "test"
+                break
+
+        if phase == "":
+            continue
+
+        if phase not in used_video.keys():
+            used_video[phase] = [videoname]
+        else:
+            used_video[phase].append( videoname )
+
+        labelist = new_label_dict[videoname]
+        if 2 in labelist:
+            AL_indx = labelist.index(2)
+        else:
+            AL_indx = len(labelist)
+
+        if 3 in labelist:
+            MCT_indx = labelist.index(3)
+        else:
+            MCT_indx = len(labelist)
+
+        if MCT_indx == AL_indx:
+            dont_have_AL_MCT.append(videoname)
+            continue
+
+        # MCT_indx = labelist.index(3)
+        extract_indx = min(AL_indx, MCT_indx)
+        start =  max(0, extract_indx-10)
+        end = extract_indx + 10
+
+        sequnce_len = 20
+
+        if phase not in parkland_train_val_dict["phase"].keys():
+            parkland_train_val_dict["phase"][phase] = {}
+
+        for imgid in range(0, end):
+
+
+            sequnce = []
+            parkland = False
+            for idx in range(sequnce_len):
+
+                if imgid+idx >= start and imgid+idx <= end:
+                    parkland = True
+                picture_name = "{}_{:0>5}.jpg".format(videoname, (imgid+idx) * 8)
+                if picture_name in picture_list:
+                    sequnce.append( os.path.join( videoname,picture_name))
+
+            if len(sequnce) == sequnce_len:
+                if parkland:
+                    if parkland_id not in parkland_train_val_dict["phase"][phase].keys():
+                        parkland_train_val_dict["phase"][phase][parkland_id] = [sequnce]
+                    else:
+                        parkland_train_val_dict["phase"][phase][parkland_id].append( sequnce )
+                else:
+                    if 0 not in parkland_train_val_dict["phase"][phase].keys():
+                        parkland_train_val_dict["phase"][phase][0] = [sequnce]
+                    else:
+                        parkland_train_val_dict["phase"][phase][0].append( sequnce)
+
+    with open(save_json_path, "w") as f:
+        json.dump(parkland_train_val_dict,f)
+
+
+    with open(used_video_json_path, "w") as f:
+        json.dump( used_video,f)
+
+
+
 def extracted_parkland_picture():
 
 
     extrcat_save_dir = "/home/withai/Desktop/extracted_img_4_parkland_100_1"
 
     extrcat_fps = 1
-    pth1, pth2, videoinfopth, videolist
+    pth1 = "/Users/guan/Desktop/phase_specialevents_parkland/phase_specialevents_parkland/phases/35"
+    pth2 = "/Users/guan/Desktop/phase_specialevents_parkland/phase_specialevents_parkland/phases/36"
+    videoinfopth = "/Users/guan/Desktop/document/medical/项目/LC/8月LC实验/8月LC/videopth_info.json"
+    videolist = [pth.split(".")[0] for pth in os.listdir(pth1)]
     label_name_dict = get_json_label(extrcat_fps, pth1,pth2, videoinfopth, videolist)
     picture_dir = "/home/withai/Pictures/LCFrame/100-1-2-8fps"
     videonamelist = os.listdir(picture_dir)
@@ -337,13 +519,129 @@ def extracted_append_video():
 
     extract_frame( videopaths, savedir)
 
+def statistic_parkland():
+
+    path    = "/Users/guan/Desktop/document/medical/项目/LC/8月LC实验/8月LC/videolist_8_3_wsd.xlsx"
+    xlsdata1 = [pth[0] for pth in read_xls_rows(path) ]
+
+    path    = "/Users/guan/Desktop/document/medical/项目/LC/8月LC实验/8月LC/videolist_8_3_wsd.xlsx"
+    xlsdata2 = [pth[0] for pth in read_xls_rows(path,1) ]
+
+    path    = "/Users/guan/Desktop/document/medical/项目/LC/8月LC实验/8月LC/videolist_8_3_wsd.xlsx"
+    xlsdata3 = [pth[0] for pth in read_xls_rows(path,2) ]
+
+    path          = "/Users/guan/Desktop/document/medical/项目/LC/parkland分级/Parklands_222.xlsx"
+    parkland_data = read_xls_rows(path)
+
+    video_label   = {
+        "equal":{
+
+        },
+        "different":
+        {
+
+        },
+        "label":{
+
+        },
+        "phase":{
+
+        }
+    }
+
+
+    for rowid in range(1, len(parkland_data)):
+        rowdata   = parkland_data[rowid]
+        videoname = rowdata[0]
+        wsd       = int(rowdata[1])
+        czx       = int(rowdata[2])
+        phase     = ""
+        for video1 in xlsdata1:
+            if video1.__contains__(videoname):
+                phase = "train"
+                break
+
+        for video1 in xlsdata2:
+            if video1.__contains__(videoname):
+                phase = "valid"
+                break
+
+        for video1 in xlsdata3:
+            if video1.__contains__(videoname):
+                phase = "test"
+                break
+        if phase == "":
+            continue
+
+        if wsd == czx:
+            if phase not in video_label["phase"].keys():
+                video_label["phase"][phase] = {}
+
+            if wsd not in video_label["phase"][phase].keys():
+                video_label["phase"][phase][wsd] = [videoname]
+            else:
+                video_label["phase"][phase][wsd].append(videoname)
+
+
+            # video_label["phase"][phase][videoname] = wsd
+            video_label["equal"][videoname]        = wsd
+            if wsd not in video_label["label"].keys():
+                video_label["label"][wsd] = [videoname]
+            else:
+                video_label["label"][wsd].append(videoname)
+        else:
+            video_label["different"][videoname] = [wsd,czx]
+
+    for phase in video_label["phase"].keys():
+        print(phase)
+        for labelid in video_label["phase"][phase].keys():
+
+            print(labelid,  len( video_label["phase"][phase][labelid] ) )
+            print( video_label["phase"][phase][labelid] )
+
+
+def statistic_parkland1():
+    save_json_path = "/Users/guan/Desktop/parkland_train_val_test.json"
+    used_video_json_path = "/Users/guan/Desktop/used_video.json"
+    with open( save_json_path) as f:
+        data = json.load(f)
+
+    video_list ={}
+    for phase in data["phase"].keys():
+        if phase not in video_list.keys():
+            video_list[phase] = {}
+
+        for labelid in data["phase"][phase].keys():
+            if labelid not in video_list[phase].keys():
+                video_list[phase][labelid] = []
+
+            for sequnce in data["phase"][phase][labelid]:
+                videoname = sequnce[0].split("/")[0]
+                if videoname not in video_list[phase][labelid]:
+                    video_list[phase][labelid].append( videoname )
+
+
+    for phase in video_list.keys():
+
+        print(phase)
+        for labelid in video_list[phase].keys():
+            if labelid == '0':
+                continue
+
+            print( labelid, len( video_list[phase][labelid] ) )
+            print( video_list[phase][labelid]  )
+
+    print("end")
+
 if __name__ == "__main__":
 
+    # statistic_parkland()
 
-    extracted_parkland_picture()
+    genearate_parkland_train_label()
+    # extracted_parkland_picture()
 
     # extracted_append_video()
-    savedir = "/home/withai/Desktop/"
-    get_video_info(savedir)
+    # savedir = "/home/withai/Desktop/"
+    # get_video_info(savedir)
 
     print("end")

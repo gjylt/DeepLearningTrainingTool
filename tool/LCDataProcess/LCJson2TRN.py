@@ -501,14 +501,11 @@ def get_video_info():
 
 
 def get_json_label(extract_fps, pth1,pth2, videoinfopth, videolist):
-    # pth1 = "/home/withai/Desktop/phase-100-1/100-1/100-1/CZX"
-    # pth2 = "/home/withai/Desktop/phase-100-1/100-1/100-1/WSD"
-    # extract_fps = 8
+
     filelist1   = os.listdir(pth1)
     filelist2   = os.listdir(pth2)
 
     #get video information
-    # videoinfopth = "/mnt/FileExchange/withai/project/LC阶段识别/videopth_info_update_2021_8_4.json"
     video_info   = {}
     if os.path.exists(videoinfopth):
         with open(videoinfopth) as f:
@@ -533,20 +530,13 @@ def get_json_label(extract_fps, pth1,pth2, videoinfopth, videolist):
         with open(videoinfopth,'w') as f:
             json.dump(video_info,f)
 
-    #find out the videos both in two directory
-    # videolist     = []
-    # filenamelist1 = os.listdir(pth1)
-    # filenamelist2 = os.listdir(pth2)
-    # for filename in filenamelist1:
-    #     if filename in filenamelist2:
-    #         videolist.append(filename)
-
     #remaind the video name exist video infomation
     read_dict = {}
     for videoname in videolist:
-        videoname = videoname.split('.')[0]
+        if videoname.__contains__("."):
+            videoname = videoname.split('.')[0]
         surgid    = videoname.split('-')[-1]
-        find = False
+        find      = False
         for videoname1 in video_info.keys():
             if videoname1.__contains__(surgid) or videoname.__contains__(videoname1):
                 read_dict[videoname] = video_info[videoname1]
@@ -568,11 +558,16 @@ def get_json_label(extract_fps, pth1,pth2, videoinfopth, videolist):
                 read_dict[videoname]["lable"] = [os.path.join(pth2, filename)]
             else:
                 read_dict[videoname]["lable"].append( os.path.join(pth2, filename) )
+        else:
+            print( videoname ,"info not found")
 
     label_name_dict = {}
     lablenames      = []
     prelabel = 0
     for filename in read_dict.keys():
+
+        if "lable" not in read_dict[filename].keys():
+            continue
 
         filelist = read_dict[filename]["lable"]
         duration = math.ceil( read_dict[filename]["duration"] )*extract_fps
