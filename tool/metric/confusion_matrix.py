@@ -93,7 +93,7 @@ def compute_ap(recall, precision):
 import json
 def confusematrix():
 
-    pth = "/home/withai/Desktop/LCLabelFiles/LCPhase_4action_len8_fs8_version1_valid_result.json"
+    pth = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_test_result.json"
     with open(pth,'r') as f:
         data = json.load(f)
 
@@ -125,7 +125,7 @@ def confusematrix():
 
     print(class_dic)
 
-    classNum       = 5
+    classNum       = 7
     matrix = np.zeros((classNum, classNum))
     for i in range(len(sequenceLabel)):
       matrix[sequenceResult[i], sequenceLabel[i]] += 1
@@ -304,6 +304,78 @@ def compute_postprocess():
     return label_nane_dict
 
 
+import shutil
+def extracted_test_result_sequnce():
+
+    pth = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_test_result.json"
+    with open(pth,'r') as f:
+        data = json.load(f)
+
+    datadir = "/home/withai/Pictures/LCFrame/append_video-8fps"
+    error_dict = {}
+    for path in data.keys():
+        result = data[path]
+        destpth = os.path.join(datadir,path+'.jpg')
+        if not os.path.exists(destpth):
+            continue
+        label = result[1]
+        pred  = result[0]
+        if label != pred:
+            if label not in error_dict.keys():
+                error_dict[label] ={}
+
+            if pred not in error_dict[label].keys():
+                error_dict[label][pred] = [path]
+            else:
+                error_dict[label][pred].append(path)
+
+    tasklabel = [1,2,5]
+    savedir   = "/home/withai/Desktop/LCLabelFiles/lc_errordta"
+    for label in tasklabel:
+        for pred in error_dict[label].keys():
+
+            for errordata in error_dict[label][pred]:
+                splistlist = errordata.split("_")
+                endnum     = int( splistlist[-1] )
+                start      = endnum - 23*8
+                if start < 0:
+                    continue
+                startstr   = "{:0>5}".format(start)
+
+                splistlist[-1] = startstr
+                startline  = "_".join(splistlist)
+
+                destpth = os.path.join(datadir, startline + '.jpg')
+
+                if not os.path.exists(destpth):
+                    print(destpth)
+                    continue
+
+                figdirname   = errordata.split("/")[-1]
+                sub_save_dir = os.path.join(savedir,str(label), str(pred), figdirname)
+
+                if not os.path.exists(sub_save_dir):
+                    os.makedirs(sub_save_dir)
+
+                for idx in range(start,endnum,8):
+
+                    figlist = figdirname.split("_")
+
+                    startstr    = "{:0>5}".format(idx)
+                    figlist[-1] = startstr
+                    startline   = "_".join(figlist)
+                    destpth     = os.path.join(sub_save_dir, startline + '.jpg')
+
+                    startstr       = "{:0>5}".format(start)
+                    splistlist[-1] = startstr
+                    startline      = "_".join(splistlist)
+                    srcpth         = os.path.join(datadir, startline + '.jpg')
+
+                    shutil.copy(srcpth,destpth)
+
+    print(error_dict)
+
+
 
 if __name__ =="__main__":
 
@@ -312,7 +384,10 @@ if __name__ =="__main__":
     #     data = json.load(f)
 
     # compute_postprocess()
-    confusematrix()
+    # confusematrix()
+
+    extracted_test_result_sequnce()
+
     print("")
 
 

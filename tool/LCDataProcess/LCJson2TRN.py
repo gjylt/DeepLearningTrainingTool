@@ -489,7 +489,7 @@ def get_video_info():
             fps = metaData['fps']
             duration = metaData['duration']
             video_info[videoname] = {}
-            video_info[videoname]['path'] = pth
+            video_info[videoname]['path'] = pthF
             video_info[videoname]['fps']  = fps
             video_info[videoname]['duration'] = duration
         except:
@@ -770,8 +770,8 @@ def re_create():
     with open(path) as f:
         ori_data = json.load(f)
 
-    save_path = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_train_val.json"
-    phse_list = ["train", "valid"]
+    save_path = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_test.json"
+    phse_list = ["test"]
     new_dict = {
         "phase":{
 
@@ -786,12 +786,118 @@ def re_create():
         json.dump(new_dict,f)
 
 
+def check_video_exist():
+
+    path1     = "/home/withai/Pictures/LCFrame/100-1-2-8fps"
+    videolist1 = os.listdir(path1)
+
+    path2     = "/home/withai/Pictures/LCFrame/append_video-8fps"
+    videolist2 = os.listdir(path2)
+
+    path3     = "/home/withai/Pictures/LCFrame/100-3-8fps"
+    videolist3 = os.listdir(path3)
+
+    jsonpath  = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_test.json"
+    with open(jsonpath) as f:
+        data = json.load(f)
+
+
+    path    = "/home/withai/Desktop/videolist_8_3_wsd.xlsx"
+    xlsdata_test = [pth[0] for pth in  read_xls_rows(path,2) ]
+
+    test_video_list = []
+    new_dict = {
+        "phase":{
+            "test":{
+
+            }
+        }
+    }
+    for labelid in data["phase"]["test"].keys():
+        for sequnce in data["phase"]["test"][labelid]:
+            videoname = sequnce[0].split("/")[0]
+            find = False
+            for videoname1 in xlsdata_test:
+                resident_id = videoname1.split("-")[-1]
+                if videoname.__contains__(resident_id):
+                    find = True
+                    if labelid not in new_dict["phase"]["test"].keys():
+                        new_dict["phase"]["test"][labelid] = [sequnce]
+                    else:
+                        new_dict["phase"]["test"][labelid].append(sequnce)
+                    if videoname not in test_video_list:
+                        test_video_list.append(videoname)
+
+                    break
+
+    # jsonpath  = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_test.json"
+    # with open(jsonpath, "w") as f:
+    #     json.dump( new_dict,f)
+
+    not_find_list1 = []
+    find_dict1 = {}
+    for video in test_video_list:
+        find = False
+        resident_id = video.split("-")[-1]
+        for video1 in videolist1:
+            if video1.__contains__(resident_id):
+                find = True
+                find_dict1[video] = video1
+                break
+            # print(video1)
+        if not find:
+            not_find_list1.append(video)
+
+
+    not_find_list2 = []
+    find_dict2 = {}
+    for video in not_find_list1:
+        find = False
+        resident_id = video.split("-")[-1]
+        for video1 in videolist2:
+            if video1.__contains__(resident_id):
+                find = True
+                find_dict2[video] = video1
+                break
+            # print(video1)
+        if not find:
+            not_find_list2.append(video)
+
+    not_find_list3 = []
+    find_dict3 = {}
+    for video in not_find_list2:
+        find = False
+        resident_id = video.split("-")[-1]
+        for video1 in videolist3:
+            if video1.__contains__(resident_id):
+                find = True
+                find_dict2[video] = video1
+                break
+            # print(video1)
+        if not find:
+            not_find_list3.append(video)
+
+
+    for video in find_dict1.keys():
+
+        videoname = find_dict1[video]
+        srcpth    = os.path.join( path1, videoname)
+        despth    = os.path.join( path2,videoname)
+        if os.path.exists(despth):
+            continue
+
+        cmd = "cp -r "+srcpth+" "+despth
+        os.system( cmd )
+
+    print(not_find_list3)
 
 
 if __name__ == "__main__":
     # get_video_list()
 
-    get_append_video()
+    # get_append_video()
+
+    check_video_exist()
 
     # re_create()
     # generate_label()

@@ -21,17 +21,17 @@ def main():
 
     # Phase
     dictCategories = {'phase': [ '7', '8', '9', '10']}
-    dictCategories = {'phase': ['0', '1', '2', '3','4']}
+    dictCategories = {'phase': ['0', '1', '2', '3','4','5','6']}
     rule = 'phase'
 
-    dirImage   = '/home/withai/Pictures/LCFrame/100-1-2-8fps'
-    pathJson   = '/home/withai/Desktop/LCLabelFiles/LCPhase_version1_len8_2_annotator_checked.json'
-    recordJson = "/home/withai/Desktop/LCLabelFiles/LCPhase_4action_len8_fs8_version1_valid_result.json"
+    dirImage   = '/home/withai/Pictures/LCFrame/append_video-8fps'
+    pathJson   = '/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_test_checked.json'
+    recordJson = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_test_result.json"
 
     categories = dictCategories[rule]
     num_class  = len(categories)
     # args.resume = f"/home/withai/wangyx/checkPoint/TRN/{rule}.pth.tar"
-    args.resume = '/home/withai/Desktop/LCLabelFiles/TRN__RGB_BNInception__segment8_version1_4action_2anitator_best.pth.tar'
+    args.resume = '/home/withai/Desktop/LCLabelFiles/TRN_6phase_222_2anitator_best.pth.tar'
 
     args.store_name = '_'.join(
         ['TRN', args.dataset, args.modality, args.arch, args.consensus_type, 'segment%d' % args.num_segments])
@@ -79,7 +79,7 @@ def main():
     val_loader = torch.utils.data.DataLoader(
         customCVSDataSet(dirImage,
                          pathJson,
-                         'valid', rule, torchvision.transforms.Compose([
+                         'test', rule, torchvision.transforms.Compose([
                 GroupScale(int(scale_size)),
                 GroupCenterCrop(crop_size),
                 Stack(roll=(args.arch in ['BNInception', 'InceptionV3'])),
