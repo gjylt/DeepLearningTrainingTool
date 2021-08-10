@@ -547,19 +547,22 @@ def get_json_label(extract_fps, pth1,pth2, videoinfopth, videolist):
 
     #
     for filename in filelist1:
-        videoname = filename.split(".")[0]
-        if videoname in read_dict.keys():
-            read_dict[videoname]["lable"] = [os.path.join(pth1, filename)]
+        videoname   = filename.split(".")[0]
+        resident_id = videoname.split("-")[-1]
+        find = False
+        for videoname2 in read_dict.keys():
+            if videoname2.__contains__(resident_id):
 
-    for filename in filelist2:
-        videoname = filename.split(".")[0]
-        if videoname  in read_dict.keys():
-            if "lable" not in read_dict[videoname].keys():
-                read_dict[videoname]["lable"] = [os.path.join(pth2, filename)]
-            else:
-                read_dict[videoname]["lable"].append( os.path.join(pth2, filename) )
-        else:
-            print( videoname ,"info not found")
+                path1 = os.path.join(pth1, filename)
+                path2 = os.path.join(pth2, filename)
+                if os.path.exists(path1) and os.path.exists(path2):
+                    find = True
+                    read_dict[videoname2]["lable"] = [ path1,path2]
+                break
+
+        if not find:
+            print(videoname, "not found1")
+
 
     label_name_dict = {}
     lablenames      = []
@@ -781,119 +784,387 @@ def re_create():
         json.dump(new_dict,f)
 
 
-def check_video_exist():
 
-    path1     = "/home/withai/Pictures/LCFrame/100-1-2-8fps"
-    videolist1 = os.listdir(path1)
-
-    path2     = "/home/withai/Pictures/LCFrame/append_video-8fps"
-    videolist2 = os.listdir(path2)
-
-    path3     = "/home/withai/Pictures/LCFrame/100-3-8fps"
-    videolist3 = os.listdir(path3)
-
-    jsonpath  = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_test.json"
-    with open(jsonpath) as f:
-        data = json.load(f)
-
-
-    path    = "/home/withai/Desktop/videolist_8_3_wsd.xlsx"
-    xlsdata_test = [pth[0] for pth in  read_xls_rows(path,2) ]
-
-    test_video_list = []
-    new_dict = {
-        "phase":{
-            "test":{
-
-            }
-        }
-    }
-    for labelid in data["phase"]["test"].keys():
-        for sequnce in data["phase"]["test"][labelid]:
-            videoname = sequnce[0].split("/")[0]
-            find = False
-            for videoname1 in xlsdata_test:
-                resident_id = videoname1.split("-")[-1]
-                if videoname.__contains__(resident_id):
-                    find = True
-                    if labelid not in new_dict["phase"]["test"].keys():
-                        new_dict["phase"]["test"][labelid] = [sequnce]
-                    else:
-                        new_dict["phase"]["test"][labelid].append(sequnce)
-                    if videoname not in test_video_list:
-                        test_video_list.append(videoname)
-
-                    break
-
-    # jsonpath  = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_test.json"
-    # with open(jsonpath, "w") as f:
-    #     json.dump( new_dict,f)
-
-    not_find_list1 = []
-    find_dict1 = {}
-    for video in test_video_list:
-        find = False
-        resident_id = video.split("-")[-1]
-        for video1 in videolist1:
-            if video1.__contains__(resident_id):
-                find = True
-                find_dict1[video] = video1
-                break
-            # print(video1)
-        if not find:
-            not_find_list1.append(video)
-
-
-    not_find_list2 = []
-    find_dict2 = {}
-    for video in not_find_list1:
-        find = False
-        resident_id = video.split("-")[-1]
-        for video1 in videolist2:
-            if video1.__contains__(resident_id):
-                find = True
-                find_dict2[video] = video1
-                break
-            # print(video1)
-        if not find:
-            not_find_list2.append(video)
-
+def find_exist_not_exist( path3, not_find_list2 ):
+    # path3      = "/home/withai/Pictures/LCFrame/100-3-8fps"
+    videolist3     = os.listdir(path3)
     not_find_list3 = []
-    find_dict3 = {}
+    find_dict3     = {}
     for video in not_find_list2:
         find = False
         resident_id = video.split("-")[-1]
         for video1 in videolist3:
             if video1.__contains__(resident_id):
                 find = True
-                find_dict2[video] = video1
+                find_dict3[video] = video1
                 break
             # print(video1)
         if not find:
             not_find_list3.append(video)
 
+    return find_dict3,not_find_list3
+
+
+def copy_dir(find_dict1, srcdir, desdir):
 
     for video in find_dict1.keys():
 
         videoname = find_dict1[video]
-        srcpth    = os.path.join( path1, videoname)
-        despth    = os.path.join( path2,videoname)
+        srcpth    = os.path.join( srcdir, videoname)
+        despth    = os.path.join( desdir,videoname)
         if os.path.exists(despth):
             continue
 
         cmd = "cp -r "+srcpth+" "+despth
         os.system( cmd )
 
+
+
+def check_video_exist():
+
+
+    train_val_list = train_list_g + valid_list_g
+
+    exist_picture  = "/home/withai/Desktop/LCLabelFiles/train_val_new.txt"
+    with open(exist_picture) as f:
+        video_exist1 = f.readlines()
+
+    video_exist = [ pth.split()[-1].replace("\n","") for pth in video_exist1 if pth.__contains__("ORIGIN")]
+    not_find_list = []
+    for videoname in train_val_list:
+        resident_id = videoname.split("-")[-1]
+        find = False
+        for videoname1 in video_exist:
+            if videoname1.__contains__(resident_id):
+                find = True
+                break
+
+        if not find:
+            not_find_list.append(videoname)
+
+    path1      = "/home/withai/Pictures/LCFrame/100-1-2-8fps"
+    find_dict1, not_find_list1= find_exist_not_exist(path1, not_find_list)
+
+    path2      = "/home/withai/Pictures/LCFrame/append_video-8fps"
+    find_dict2, not_find_list2 = find_exist_not_exist(path2, not_find_list1)
+
+    path3      = "/home/withai/Pictures/LCFrame/100-3-8fps"
+    find_dict3, not_find_list3 = find_exist_not_exist(path3, not_find_list2)
+
+    append_new = "/home/withai/Pictures/LCFrame/new_append"
+    find_dict4, not_find_list4 = find_exist_not_exist(append_new, not_find_list3)
+
+    copy_dir(find_dict1, path1, append_new)
+    copy_dir(find_dict1, path2, append_new)
+    copy_dir(find_dict1, path3, append_new)
+
     print(not_find_list3)
+
+import shutil
+def copy_parkland_picture():
+
+    train_val_list = train_list_g + valid_list_g
+
+    path1      = "/home/withai/Pictures/LCFrame/100-1-2-8fps"
+    find_dict1, not_find_list1= find_exist_not_exist(path1, train_val_list)
+
+    path2      = "/home/withai/Pictures/LCFrame/append_video-8fps"
+    find_dict2, not_find_list2 = find_exist_not_exist(path2, not_find_list1)
+
+    path3      = "/home/withai/Pictures/LCFrame/100-3-8fps"
+    find_dict3, not_find_list3 = find_exist_not_exist(path3, not_find_list2)
+
+    append_new = "/home/withai/Pictures/LCFrame/new_append"
+    find_dict4, not_find_list4 = find_exist_not_exist(append_new, not_find_list3)
+
+    path = "/home/withai/Desktop/LCLabelFiles/parkland_train_val_test.json"
+    with open(path) as f:
+        parkland_data = json.load(f)
+
+    phaselist = ["train","valid"]
+    savedir   = "/home/withai/Pictures/LCFrame/picture_for_parkland"
+    new_parkland_data = {
+        "phase":{
+            "train":{
+
+            },
+            "valid":{
+
+            },
+            "test":{
+
+            }
+        }
+    }
+    picture_list = []
+    for phase in phaselist:
+
+        for labelid in parkland_data["phase"][phase].keys():
+
+            if labelid not in new_parkland_data["phase"][phase].keys():
+                new_parkland_data["phase"][phase][labelid] = []
+
+            for sequnce in parkland_data["phase"][phase][labelid]:
+
+                video_ori = sequnce[0].split("/")[0]
+                srcdir    = ""
+                VIDEONAME = ""
+                find      = False
+                dict_dest = None
+                if video_ori in find_dict1.keys():
+                    srcdir    = path1
+                    VIDEONAME = find_dict1[video_ori]
+                    find      = True
+                    dict_dest = find_dict1
+
+                if video_ori in find_dict2.keys():
+                    srcdir    = path2
+                    VIDEONAME = find_dict2[video_ori]
+                    find      = True
+                    dict_dest = find_dict2
+
+                if video_ori in find_dict3.keys():
+                    VIDEONAME = find_dict3[video_ori]
+                    srcdir    = path3
+                    find      = True
+                    dict_dest = find_dict3
+
+                if video_ori in find_dict4.keys():
+                    VIDEONAME = find_dict4[video_ori]
+                    srcdir    = append_new
+                    find      = True
+                    dict_dest = find_dict4
+
+                new_sequnce = []
+                sub_dir = os.path.join( savedir, VIDEONAME)
+                if not os.path.exists(sub_dir):
+                    os.makedirs(sub_dir)
+
+                for imgpth in sequnce:
+                    img1 = imgpth.replace( video_ori,VIDEONAME)
+                    srcpth = os.path.join( srcdir, img1)
+                    if not os.path.exists(srcpth):
+                        continue
+                    despth = os.path.join( savedir, img1)
+                    new_sequnce.append( img1 )
+                    shutil.copy(srcpth,despth)
+
+
+                if len(new_sequnce) == len(sequnce):
+                    new_parkland_data["phase"][phase][labelid].append(new_sequnce)
+
+                # print(savedir)
+
+    path = "/home/withai/Desktop/LCLabelFiles/parkland_train_val.json"
+    with open(path,"w") as f:
+        json.dump(new_parkland_data,f)
+
+
+from tool.LCDataProcess.datalist_config import train_list_g,valid_list_g,test_list_g
+
+def genearate_parkland_train_label():
+
+
+    save_json_path = "/home/withai/Desktop/LCLabelFiles/parkland_train_val_test.json"
+    used_video_json_path = "/home/withai/Desktop/LCLabelFiles/used_video.json"
+    # with open( save_json_path) as f:
+    #     data = json.load(f)
+
+    extrcat_fps  = 1
+    pth1         = "/home/withai/Desktop/LCLabelFiles/phase_specialevents/phases/35"
+    pth2         = "/home/withai/Desktop/LCLabelFiles/phase_specialevents/phases/36"
+    videoinfopth = "/home/withai/Desktop/LCLabelFiles/videopth_info.json"
+
+    parkland_path = "/Users/guan/Desktop/document/medical/项目/LC/8月LC实验/8月LC/videolist_8_3_wsd.xlsx"
+    # train_list    = [pth[0] for pth in read_xls_rows(parkland_path) ]
+    # valid_list    = [pth[0] for pth in read_xls_rows(parkland_path,1) ]
+    # test_list     = [pth[0] for pth in read_xls_rows(parkland_path, 2)]
+    train_list    = train_list_g
+    valid_list    = valid_list_g
+    test_list     = test_list_g
+    videolist     = train_list + valid_list + test_list
+
+    #get lc label
+    label_name_dict = get_json_label(extrcat_fps, pth1, pth2, videoinfopth, videolist)
+
+    #get parklable label
+    parkland_label = "/home/withai/Desktop/LCLabelFiles/Parklands.xlsx"
+    xlsrows = read_xls_rows( parkland_label )
+    parkland_sequnce = {}
+    # rows = int((len(xlsrows)-1)/2)
+    rows = len(xlsrows)
+    diffirent_sequnce = []
+    for rowid in range(1,rows):
+        # wsd_data = xlsrows[rowid*2+1]
+        # czx_data = xlsrows[rowid*2+2]
+        row_data = xlsrows[rowid]
+        if row_data[1] == row_data[2]:
+            parkland_sequnce[row_data[0]] = row_data[2]
+        else:
+            diffirent_sequnce.append( row_data[0])
+            print(row_data[0],row_data[1],row_data[2])
+
+
+    #find out video both exist parkland label and lc label
+    new_label_dict1 = {}
+    for videoname in parkland_sequnce.keys():
+        resident_id = videoname.split("-")[-1]
+        for videoname1 in label_name_dict.keys():
+            if videoname1.__contains__(resident_id):
+                new_label_dict1[videoname1] = label_name_dict[videoname1]
+
+
+    # txt_path = "/Users/guan/Desktop/trai_val.txt"
+    # with open(txt_path) as f:
+    #     extract_video_list = f.readlines()
+
+    train_val_list = train_list_g + valid_list_g + test_list_g
+    new_label_dict = {}
+    label_parkland_video_dict ={}
+    for videoname in new_label_dict1.keys():
+        resident_id = videoname.split("-")[-1]
+        for videoname1 in train_val_list:
+            if videoname1.__contains__(resident_id):
+                videoname1 = videoname1.replace("\n","")
+                new_label_dict[videoname1] = new_label_dict1[videoname]
+                label_parkland_video_dict[videoname1] = videoname
+
+
+
+    # extract picture
+    videoid = 0
+    dont_have_AL_MCT = []
+
+    parkland_train_val_dict = {
+        "phase":{
+
+        }
+    }
+
+    # train_val_img_list_path = "/Users/guan/Desktop/train_valid_data.json"
+    # with open(train_val_img_list_path) as f:
+    #     train_val_img_list = json.load(f)
+
+    used_video = {}
+    for videoname in new_label_dict.keys():
+
+        # picture_list = train_val_img_list[videoname]
+
+        if videoname not in label_parkland_video_dict.keys():
+            continue
+
+        if label_parkland_video_dict[videoname] not in parkland_sequnce.keys():
+            continue
+
+        parkland_id = int(parkland_sequnce[ label_parkland_video_dict[videoname] ])
+
+        videoid += 1
+        print(videoid,"/",len(new_label_dict.keys()))
+
+        #phase type
+        phase = ""
+        for videoinlist in train_list:
+            resident_id = videoinlist.split("-")[-1]
+            if videoname.__contains__(resident_id):
+                phase = "train"
+                break
+
+        for videoinlist in valid_list:
+            resident_id = videoinlist.split("-")[-1]
+            if videoname.__contains__(resident_id):
+                phase = "valid"
+                break
+
+        for videoinlist in test_list:
+            resident_id = videoinlist.split("-")[-1]
+            if videoname.__contains__(resident_id):
+                phase = "test"
+                break
+
+        if phase == "":
+            continue
+
+        if phase not in used_video.keys():
+            used_video[phase] = [videoname]
+        else:
+            used_video[phase].append( videoname )
+
+        # set start and end
+        labelist = new_label_dict[videoname]
+        if 2 in labelist:
+            AL_indx = labelist.index(2)
+        else:
+            AL_indx = len(labelist)
+
+        if 3 in labelist:
+            MCT_indx = labelist.index(3)
+        else:
+            MCT_indx = len(labelist)
+
+        if MCT_indx == AL_indx:
+            dont_have_AL_MCT.append(videoname)
+            continue
+
+        # MCT_indx = labelist.index(3)
+        extract_indx = min(AL_indx, MCT_indx)
+        start        = max(0, extract_indx-10)
+        end          = extract_indx + 10
+
+        sequnce_len = 20
+
+        if phase not in parkland_train_val_dict["phase"].keys():
+            parkland_train_val_dict["phase"][phase] = {}
+
+        for imgid in range(0, end):
+
+
+            sequnce = []
+            parkland = False
+            for idx in range(sequnce_len):
+
+                if imgid+idx >= start and imgid+idx <= end:
+                    parkland = True
+                picture_name = "{}_{:0>5}.jpg".format(videoname, (imgid+idx) * 8)
+                # if picture_name in picture_list:
+                sequnce.append( os.path.join( videoname,picture_name))
+
+            if len(sequnce) == sequnce_len:
+                if parkland:
+                    if parkland_id not in parkland_train_val_dict["phase"][phase].keys():
+                        parkland_train_val_dict["phase"][phase][parkland_id] = [sequnce]
+                    else:
+                        parkland_train_val_dict["phase"][phase][parkland_id].append( sequnce )
+                else:
+                    if 0 not in parkland_train_val_dict["phase"][phase].keys():
+                        parkland_train_val_dict["phase"][phase][0] = [sequnce]
+                    else:
+                        parkland_train_val_dict["phase"][phase][0].append( sequnce)
+
+    with open(save_json_path, "w") as f:
+        json.dump(parkland_train_val_dict,f)
+
+
+    with open(used_video_json_path, "w") as f:
+        json.dump( used_video,f)
+
+
+
+def create_parkland_label_accord_detect():
+
+
 
 
 if __name__ == "__main__":
+
+    # check_video_exist()
+
+    copy_parkland_picture()
+
+    # genearate_parkland_train_label()
+
     # get_video_list()
-
     # get_append_video()
-
-    check_video_exist()
-
+    # check_video_exist()
     # re_create()
     # generate_label()
 

@@ -3,6 +3,10 @@ import tqdm
 import os
 import cv2
 from tool.parse_config import get_config
+import shutil
+from tool.LCDataProcess.LCJson2TRN import get_json_label
+from tool.readwrite import read_xls_rows
+from tool.LCDataProcess.datalist_config import train_list_g,valid_list_g,test_list_g
 
 platform = "linux"
 def traversalDir(dir1, returnX='path'):
@@ -35,8 +39,10 @@ def traversalDir(dir1, returnX='path'):
             print(f"不知道这是个啥{dp}")
     return out
 
-def extract_frame(videoS,savedir):
+def extract_frame(videoS,savedir, path_info_dict):
     for path in videoS:
+
+        endpoint = path_info_dict[path]
 
         reader = imageio.get_reader(path)
         width, height = reader.get_meta_data()["size"]
@@ -47,10 +53,21 @@ def extract_frame(videoS,savedir):
         saveImageFolder = os.path.join(savedir, "{}".format(path.split('.')[0].split('/')[-1]) )
         os.makedirs(saveImageFolder, exist_ok=True)
 
+        exist_num = len(os.listdir(saveImageFolder))
+        if exist_num >= endpoint:
+            continue
+
         print("extract video", path.split('/')[-1],duration,fps,total_frame_num)
         for num, image in enumerate(tqdm.tqdm(reader, desc=path.split('.')[0].split('/')[-1], total=total_frame_num)):
+
+
             if (num // (fps/8)) > ((num - 1) // (fps/8)):
+                if int(num // (fps / 8)) + 1 > endpoint:
+                    break
+
                 imagePath = "{}/{}_{:0>5}.jpg".format(saveImageFolder, saveImageFolder.split('/')[-1], int(num // (fps/8)) + 1)
+                if os.path.exists(imagePath):
+                    continue
                 if width == 1920:
                     image = cv2.resize(image, ( 1024, int(height*1024/width) ))
                 imageio.imwrite(imagePath, image)
@@ -66,7 +83,7 @@ def get_video_info( savedir ):
     dir1        = os.path.join( get_config('nas_video_lc10000_path'),'CompleteVideo' )
     pth_list    = traversalDir(dir1, returnX='path')
 
-    pth_list = [pth for pth in pth_list if pth.__contains__("ORIGIN") and (pth.endswith("mp4") or pth.endswith("MP4")) ]
+    pth_list    = [pth for pth in pth_list if pth.__contains__("ORIGIN") and (pth.endswith("mp4") or pth.endswith("MP4")) ]
     video_dict  = {}
 
     oldpath = "/home/withai/Desktop/LCLabelFiles/videopth_info_.json"
@@ -120,233 +137,47 @@ video_path ={
 
 
 
-# def extract_frame():
-#
-#     for videoname in video_path.keys():
-#         path = os.path.join( "/mnt/video/LC10000/CompleteVideo/", video_path[videoname] )
-#         vid = imageio.get_reader(path, 'ffmpeg')
-#         metaData = vid.get_meta_data()
-#         print(videoname,metaData)
-#
-#     savedir = get_config('savedir')
-#
-#     get_video_info( savedir )
-#
-#     nas_video_path = get_config("nas_video_path")
-#     pth_list    = traversalDir(nas_video_path, returnX='path')
-#     video_dict  = {}
-#     appendlist  = []
-#     for pth in pth_list:
-#         if not pth.__contains__('ORIGIN'):
-#             continue
-#         appendx = pth.split('.')[-1]
-#         if appendx == "mp4" or appendx == "MP4":
-#             videoname = pth.split('/')[-1].split('.')[0]
-#             if videoname in video_dict.keys():
-#                 print(videoname,pth,video_dict[videoname])
-#             else:
-#                 video_dict[videoname] = pth
-#
-#     # savepth = "/home/withai/Desktop/videopth.json"
-#     # with open(savepth,'w') as f:
-#     #     json.dump(video_dict,f)
-#     videolist_xls = get_config("videolist_xls")
-#
-#     videos     = read_xls_rows(videolist_xls)
-#     videopaths = []
-#     for video in videos:
-#         videoname = video[0]
-#         if videoname in video_dict.keys():
-#             videopaths.append( video_dict[videoname] )
-#
-#     savedir = get_config("savedir")
-#     extract_frame( videopaths, savedir)
+def extract_frame_from_videos():
 
+    for videoname in video_path.keys():
+        path = os.path.join( "/mnt/video/LC10000/CompleteVideo/", video_path[videoname] )
+        vid  = imageio.get_reader(path, 'ffmpeg')
+        metaData = vid.get_meta_data()
+        print(videoname,metaData)
 
+    savedir = get_config('savedir')
 
-import shutil
+    get_video_info( savedir )
 
-from tool.LCDataProcess.LCJson2TRN import get_json_label
-from tool.readwrite import read_xls_rows
-
-
-def genearate_parkland_train_label():
-
-
-    save_json_path = "/Users/guan/Desktop/parkland_train_val_test.json"
-    used_video_json_path = "/Users/guan/Desktop/used_video.json"
-    # with open( save_json_path) as f:
-    #     data = json.load(f)
-
-    extrcat_fps  = 1
-    pth1         = "/Users/guan/Desktop/phase_specialevents_parkland/phase_specialevents_parkland/phases/35"
-    pth2         = "/Users/guan/Desktop/phase_specialevents_parkland/phase_specialevents_parkland/phases/36"
-    videoinfopth = "/Users/guan/Desktop/document/medical/项目/LC/8月LC实验/8月LC/videopth_info.json"
-
-    parkland_path = "/Users/guan/Desktop/document/medical/项目/LC/8月LC实验/8月LC/videolist_8_3_wsd.xlsx"
-    train_list    = [pth[0] for pth in read_xls_rows(parkland_path) ]
-    valid_list    = [pth[0] for pth in read_xls_rows(parkland_path,1) ]
-    test_list     = [pth[0] for pth in read_xls_rows(parkland_path, 2)]
-    videolist     = train_list + valid_list + test_list
-
-    label_name_dict = get_json_label(extrcat_fps, pth1,pth2, videoinfopth, videolist)
-
-    parkland_label = "/Users/guan/Desktop/phase_specialevents_parkland/phase_specialevents_parkland/parkland/Parklands_label.xlsx"
-    xlsrows = read_xls_rows( parkland_label )
-
-
-    parkland_sequnce = {}
-    # rows = int((len(xlsrows)-1)/2)
-    rows = len(xlsrows)
-    diffirent_sequnce = []
-    for rowid in range(1,rows):
-        # wsd_data = xlsrows[rowid*2+1]
-        # czx_data = xlsrows[rowid*2+2]
-        row_data = xlsrows[rowid]
-        if row_data[1] == row_data[2]:
-            parkland_sequnce[row_data[0]] = row_data[2]
-        else:
-            diffirent_sequnce.append( row_data[0])
-            print(row_data[0],row_data[1],row_data[2])
-
-    txt_path = "/Users/guan/Desktop/trai_val.txt"
-    with open(txt_path) as f:
-        extract_video_list = f.readlines()
-
-    new_label_dict1 = {}
-    for videoname in parkland_sequnce.keys():
-        resident_id = videoname.split("-")[-1]
-        for videoname1 in label_name_dict.keys():
-            if videoname1.__contains__(resident_id):
-                new_label_dict1[videoname1] = label_name_dict[videoname1]
-
-    new_label_dict = {}
-    label_parkland_video_dict ={}
-    for videoname in new_label_dict1.keys():
-        resident_id = videoname.split("-")[-1]
-        for videoname1 in extract_video_list:
-            if videoname1.__contains__(resident_id):
-                videoname1 = videoname1.replace("\n","")
-                new_label_dict[videoname1] = new_label_dict1[videoname]
-                label_parkland_video_dict[videoname1] = videoname
-
-
-
-    # extract picture
-    videoid = 0
-    dont_have_AL_MCT = []
-
-    parkland_train_val_dict = {
-        "phase":{
-
-        }
-    }
-
-    train_val_img_list_path = "/Users/guan/Desktop/train_valid_data.json"
-    with open(train_val_img_list_path) as f:
-        train_val_img_list = json.load(f)
-
-    used_video = {}
-    for videoname in new_label_dict.keys():
-
-        picture_list = train_val_img_list[videoname]
-
-        if videoname not in label_parkland_video_dict.keys():
+    nas_video_path = get_config("nas_video_path")
+    pth_list    = traversalDir(nas_video_path, returnX='path')
+    video_dict  = {}
+    appendlist  = []
+    for pth in pth_list:
+        if not pth.__contains__('ORIGIN'):
             continue
+        appendx = pth.split('.')[-1]
+        if appendx == "mp4" or appendx == "MP4":
+            videoname = pth.split('/')[-1].split('.')[0]
+            if videoname in video_dict.keys():
+                print(videoname,pth,video_dict[videoname])
+            else:
+                video_dict[videoname] = pth
 
-        if label_parkland_video_dict[videoname] not in parkland_sequnce.keys():
-            continue
+    # savepth = "/home/withai/Desktop/videopth.json"
+    # with open(savepth,'w') as f:
+    #     json.dump(video_dict,f)
+    videolist_xls = get_config("videolist_xls")
 
-        parkland_id = int(parkland_sequnce[ label_parkland_video_dict[videoname] ])
+    videos     = read_xls_rows(videolist_xls)
+    videopaths = []
+    for video in videos:
+        videoname = video[0]
+        if videoname in video_dict.keys():
+            videopaths.append( video_dict[videoname] )
 
-        videoid += 1
-        print(videoid,"/",len(new_label_dict.keys()))
-
-        phase = ""
-        for videoinlist in train_list:
-            resident_id = videoinlist.split("-")[-1]
-            if videoname.__contains__(resident_id):
-                phase = "train"
-                break
-
-        for videoinlist in valid_list:
-            resident_id = videoinlist.split("-")[-1]
-            if videoname.__contains__(resident_id):
-                phase = "valid"
-                break
-
-        for videoinlist in test_list:
-            resident_id = videoinlist.split("-")[-1]
-            if videoname.__contains__(resident_id):
-                phase = "test"
-                break
-
-        if phase == "":
-            continue
-
-        if phase not in used_video.keys():
-            used_video[phase] = [videoname]
-        else:
-            used_video[phase].append( videoname )
-
-        labelist = new_label_dict[videoname]
-        if 2 in labelist:
-            AL_indx = labelist.index(2)
-        else:
-            AL_indx = len(labelist)
-
-        if 3 in labelist:
-            MCT_indx = labelist.index(3)
-        else:
-            MCT_indx = len(labelist)
-
-        if MCT_indx == AL_indx:
-            dont_have_AL_MCT.append(videoname)
-            continue
-
-        # MCT_indx = labelist.index(3)
-        extract_indx = min(AL_indx, MCT_indx)
-        start =  max(0, extract_indx-10)
-        end = extract_indx + 10
-
-        sequnce_len = 20
-
-        if phase not in parkland_train_val_dict["phase"].keys():
-            parkland_train_val_dict["phase"][phase] = {}
-
-        for imgid in range(0, end):
-
-
-            sequnce = []
-            parkland = False
-            for idx in range(sequnce_len):
-
-                if imgid+idx >= start and imgid+idx <= end:
-                    parkland = True
-                picture_name = "{}_{:0>5}.jpg".format(videoname, (imgid+idx) * 8)
-                if picture_name in picture_list:
-                    sequnce.append( os.path.join( videoname,picture_name))
-
-            if len(sequnce) == sequnce_len:
-                if parkland:
-                    if parkland_id not in parkland_train_val_dict["phase"][phase].keys():
-                        parkland_train_val_dict["phase"][phase][parkland_id] = [sequnce]
-                    else:
-                        parkland_train_val_dict["phase"][phase][parkland_id].append( sequnce )
-                else:
-                    if 0 not in parkland_train_val_dict["phase"][phase].keys():
-                        parkland_train_val_dict["phase"][phase][0] = [sequnce]
-                    else:
-                        parkland_train_val_dict["phase"][phase][0].append( sequnce)
-
-    with open(save_json_path, "w") as f:
-        json.dump(parkland_train_val_dict,f)
-
-
-    with open(used_video_json_path, "w") as f:
-        json.dump( used_video,f)
-
-
+    savedir = get_config("savedir")
+    extract_frame( videopaths, savedir)
 
 def extracted_parkland_picture():
 
@@ -633,11 +464,118 @@ def statistic_parkland1():
 
     print("end")
 
+
+def extract_video_frame_according_label():
+    videopaths    = []
+    savedir       = "/home/withai/Pictures/LCFrame/new_append"
+    train_val_txt = "/home/withai/Desktop/LCLabelFiles/train_val_new.txt"
+    with open(train_val_txt) as f:
+        train_val_videos = f.readlines()
+
+    target_list = train_list_g + valid_list_g
+
+    #find video list not in train and valid
+    not_find_list = []
+    for videoname in target_list:
+        resident_id = videoname.split("-")[-1]
+        find = False
+        for videoname1 in train_val_videos:
+            if videoname1.__contains__(resident_id):
+                find = True
+                break
+        if not find:
+            not_find_list.append(videoname)
+
+    videopath1 = "/home/withai/Pictures/LCFrame/100-1-2-8fps"
+    videolist1 = os.listdir(videopath1)
+    not_find_list1 = []
+    find_in_1  = []
+    for videoname in not_find_list:
+        resident_id = videoname.split("-")[-1]
+        find = False
+        for videoname1 in videolist1:
+            if videoname1.__contains__(resident_id):
+                find = True
+                find_in_1.append(videoname1)
+                break
+        if not find:
+            not_find_list1.append(videoname)
+
+    videopath2     = "/home/withai/Pictures/LCFrame/append_video-8fps"
+    videolist2     = os.listdir(videopath2)
+    not_find_list2 = []
+    find_in_2      = []
+    for videoname in not_find_list1:
+        resident_id = videoname.split("-")[-1]
+        find = False
+        for videoname1 in videolist2:
+            if videoname1.__contains__(resident_id):
+                find = True
+                find_in_2.append( videoname1 )
+                break
+        if not find:
+            not_find_list2.append(videoname)
+
+
+    videoinfo = "/home/withai/Desktop/LCLabelFiles/videopth_info.json"
+    with open(videoinfo) as f:
+        video_info = json.load(f)
+
+    for videoname in video_info.keys():
+        if not videoname.__contains__("ORIGIN"):
+            continue
+        for notfind in not_find_list2:
+            resident_id = notfind.split("-")[-1]
+            if videoname.__contains__(resident_id):
+                path = video_info[videoname]['path']
+                videopaths.append(path)
+
+
+
+    extrcat_fps     = 1
+    pth1            = "/home/withai/Desktop/LCLabelFiles/phase_specialevents/phases/35"
+    pth2            = "/home/withai/Desktop/LCLabelFiles/phase_specialevents/phases/36"
+    videoinfopth    = "/home/withai/Desktop/LCLabelFiles/videopth_info.json"
+    train_list      = train_list_g
+    valid_list      = valid_list_g
+    test_list       = test_list_g
+    videolist       = train_list + valid_list + test_list
+    label_name_dict = get_json_label(extrcat_fps, pth1, pth2, videoinfopth, videolist)
+
+    path_info_dict = {}
+    not_find_list_ = []
+    for path in videopaths:
+
+        find = False
+        for videoname in label_name_dict.keys():
+            resident_id = videoname.split("-")[-1]
+            if path.__contains__(resident_id):
+                find = True
+                labelist = label_name_dict[videoname]
+
+                al_idx = len(labelist)
+                mct_idx= len(labelist)
+                if 2 in labelist:
+                    al_idx = labelist.index(2)
+                if 3 in labelist:
+                    mct_idx= labelist.index(3)
+
+                target_idx = min(al_idx,mct_idx)
+                path_info_dict[path] = (target_idx+10)*8
+
+                break
+
+        if not find:
+            not_find_list_.append(path)
+
+    extract_frame( videopaths, savedir, path_info_dict )
+
 if __name__ == "__main__":
 
-    # statistic_parkland()
+    extract_video_frame_according_label()
 
-    genearate_parkland_train_label()
+    # statistic_parkland()
+    # genearate_parkland_train_label()
     # extracted_parkland_picture()
 
     # extracted_append_video()
