@@ -93,7 +93,11 @@ def compute_ap(recall, precision):
 import json
 def confusematrix(pth):
 
+<<<<<<< HEAD
     # pth = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_test_result.json"
+=======
+    pth = "/Users/guan/Desktop/LCPhase_222_len24_2_annotator_test_6phase_limit_bg_num_result.json"
+>>>>>>> 0dece19... test
     with open(pth,'r') as f:
         data = json.load(f)
 
@@ -406,12 +410,18 @@ if __name__ =="__main__":
     #     data = json.load(f)
 
     # compute_postprocess()
+<<<<<<< HEAD
     path = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_test_6phase_limit_bg_num_result.json"
     # confusematrix( path )
 
     # extracted_test_result_sequnce()
 
     visualize_result()
+=======
+    confusematrix()
+
+    # extracted_test_result_sequnce()
+>>>>>>> 0dece19... test
 
     print("")
 
