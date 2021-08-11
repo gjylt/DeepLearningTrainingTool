@@ -91,9 +91,9 @@ def compute_ap(recall, precision):
     return ap
 
 import json
-def confusematrix():
+def confusematrix(pth):
 
-    pth = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_test_result.json"
+    # pth = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_test_result.json"
     with open(pth,'r') as f:
         data = json.load(f)
 
@@ -305,13 +305,15 @@ def compute_postprocess():
 
 
 import shutil
-def extracted_test_result_sequnce():
+def extracted_test_result_sequnce( ):
 
-    pth = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_test_result.json"
+    pth = "/home/withai/Desktop/LCLabelFiles/LCPhase_parkland_pure_test.json"
     with open(pth,'r') as f:
         data = json.load(f)
 
-    datadir = "/home/withai/Pictures/LCFrame/append_video-8fps"
+    savedir = "/home/withai/Desktop/LCLabelFiles/parkland_test_record"
+
+    datadir = "/home/withai/Pictures/LCFrame/picture_for_parkland_test"
     error_dict = {}
     for path in data.keys():
         result = data[path]
@@ -320,17 +322,17 @@ def extracted_test_result_sequnce():
             continue
         label = result[1]
         pred  = result[0]
-        if label != pred:
-            if label not in error_dict.keys():
-                error_dict[label] ={}
+        # if label != pred:
+        if label not in error_dict.keys():
+            error_dict[label] ={}
 
-            if pred not in error_dict[label].keys():
-                error_dict[label][pred] = [path]
-            else:
-                error_dict[label][pred].append(path)
+        if pred not in error_dict[label].keys():
+            error_dict[label][pred] = [path]
+        else:
+            error_dict[label][pred].append(path)
 
-    tasklabel = [1,2,5]
-    savedir   = "/home/withai/Desktop/LCLabelFiles/lc_errordta"
+    tasklabel = error_dict.keys()
+
     for label in tasklabel:
         for pred in error_dict[label].keys():
 
@@ -359,14 +361,13 @@ def extracted_test_result_sequnce():
 
                 for idx in range(start,endnum,8):
 
-                    figlist = figdirname.split("_")
-
+                    figlist     = figdirname.split("_")
                     startstr    = "{:0>5}".format(idx)
                     figlist[-1] = startstr
                     startline   = "_".join(figlist)
                     destpth     = os.path.join(sub_save_dir, startline + '.jpg')
 
-                    startstr       = "{:0>5}".format(start)
+                    startstr       = "{:0>5}".format(idx)
                     splistlist[-1] = startstr
                     startline      = "_".join(splistlist)
                     srcpth         = os.path.join(datadir, startline + '.jpg')
@@ -376,6 +377,27 @@ def extracted_test_result_sequnce():
     print(error_dict)
 
 
+from tool.plot_figure import visualizationArray
+
+def visualize_result():
+
+    pth = "/home/withai/Desktop/LCLabelFiles/LCPhase_parkland_pure_test.json"
+    with open(pth,'r') as f:
+        data = json.load(f)
+
+    for name in data.keys():
+        videoname = name.split("/")[0]
+        sequnce = data[name]
+        id      = int( name.split("_")[-1])
+        pred    = sequnce[0]
+        label   = sequnce[1]
+
+    arraylist = []
+    videoname = ""
+    savedir   = ""
+    namlist   = []
+
+    visualizationArray( arraylist, videoname, savedir, namlist )
 
 if __name__ =="__main__":
 
@@ -384,9 +406,12 @@ if __name__ =="__main__":
     #     data = json.load(f)
 
     # compute_postprocess()
-    # confusematrix()
+    path = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_test_6phase_limit_bg_num_result.json"
+    # confusematrix( path )
 
-    extracted_test_result_sequnce()
+    # extracted_test_result_sequnce()
+
+    visualize_result()
 
     print("")
 

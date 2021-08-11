@@ -770,7 +770,7 @@ def re_create():
 
     save_path = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_test.json"
     phse_list = ["test"]
-    new_dict = {
+    new_dict  = {
         "phase":{
 
         }
@@ -863,7 +863,7 @@ def check_video_exist():
 import shutil
 def copy_parkland_picture():
 
-    train_val_list = train_list_g + valid_list_g
+    train_val_list = test_list_g
 
     path1      = "/home/withai/Pictures/LCFrame/100-1-2-8fps"
     find_dict1, not_find_list1= find_exist_not_exist(path1, train_val_list)
@@ -877,12 +877,15 @@ def copy_parkland_picture():
     append_new = "/home/withai/Pictures/LCFrame/new_append"
     find_dict4, not_find_list4 = find_exist_not_exist(append_new, not_find_list3)
 
+    picture_for_parkland = "/home/withai/Pictures/LCFrame/picture_for_parkland"
+    find_dict5, not_find_list5 = find_exist_not_exist(picture_for_parkland, not_find_list4)
+
     path = "/home/withai/Desktop/LCLabelFiles/parkland_train_val_test.json"
     with open(path) as f:
         parkland_data = json.load(f)
 
-    phaselist = ["train","valid"]
-    savedir   = "/home/withai/Pictures/LCFrame/picture_for_parkland"
+    phaselist = ["test"]
+    savedir   = "/home/withai/Pictures/LCFrame/picture_for_parkland_test"
     new_parkland_data = {
         "phase":{
             "train":{
@@ -935,6 +938,12 @@ def copy_parkland_picture():
                     find      = True
                     dict_dest = find_dict4
 
+                if video_ori in find_dict5.keys():
+                    VIDEONAME = find_dict5[video_ori]
+                    srcdir    = picture_for_parkland
+                    find      = True
+                    dict_dest = find_dict5
+
                 new_sequnce = []
                 sub_dir = os.path.join( savedir, VIDEONAME)
                 if not os.path.exists(sub_dir):
@@ -955,7 +964,7 @@ def copy_parkland_picture():
 
                 # print(savedir)
 
-    path = "/home/withai/Desktop/LCLabelFiles/parkland_train_val.json"
+    path = "/home/withai/Desktop/LCLabelFiles/parkland_test.json"
     with open(path,"w") as f:
         json.dump(new_parkland_data,f)
 
@@ -1152,13 +1161,30 @@ def genearate_parkland_train_label():
 # def create_parkland_label_accord_detect():
 
 
+def statistic_Trn_dataset():
+
+    path = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_checked.json"
+    with open(path) as f:
+        data = json.load(f)
+
+    for phase in data["phase"].keys():
+        print(phase)
+        strmsg = ""
+        for labelid in data["phase"][phase].keys():
+            strmsg += str(labelid)+":"+str( len( data["phase"][phase][labelid] ) )+"\t"
+        print(strmsg)
+
+
 
 
 if __name__ == "__main__":
 
+
+    statistic_Trn_dataset()
+
     # check_video_exist()
 
-    copy_parkland_picture()
+    # copy_parkland_picture()
 
     # genearate_parkland_train_label()
 

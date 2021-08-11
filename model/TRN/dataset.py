@@ -165,6 +165,9 @@ class customCVSDataSet(data.Dataset):
 
             for labelid in dictMsg['phase'][phase].keys():
 
+                # if labelid == '0':
+                #     continue
+
                 for sequnceid in range( len( dictMsg['phase'][phase][labelid])):
 
                     sequnce = dictMsg['phase'][phase][labelid][sequnceid]
@@ -212,6 +215,14 @@ class customCVSDataSet(data.Dataset):
             '5': 5,
             '6': 6,
         }
+
+        # self.label_map_dic={
+        #     '1': 0,
+        #     '2': 1,
+        #     '3': 2,
+        #     '4': 3,
+        #     '5': 4,
+        # }
 
         # self.balance_bg_pg_fortest( dictMsg, pg_totalnum)
 
@@ -286,6 +297,9 @@ class customCVSDataSet(data.Dataset):
             useInd = [random.choice(list(range(-1 * (interval // 2), interval // 2 + 1))) + x for x in listInd]
         else:
             useInd = listInd
+
+        if len(useInd) > self.numSegments:
+            useInd = useInd[0:4] + useInd[(len(useInd)-4):len(useInd)]
         return useInd
 
     def __len__(self):
@@ -294,7 +308,9 @@ class customCVSDataSet(data.Dataset):
     def __getitem__(self, index):
         sequence = self.listSequences[index]
         label = int(self.listLabels[index])
-        choiseInd = self.randomShift()
+
+        sequence_len = len(sequence)
+        choiseInd = self.randomShift( sequence_len )
         lastImage = sequence[-1]
         sequence = [sequence[x] for x in choiseInd]
         listImg = []

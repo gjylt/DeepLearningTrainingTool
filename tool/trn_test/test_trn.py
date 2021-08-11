@@ -10,6 +10,7 @@ from model.TRN.transforms import *
 from model.TRN.ops.opts import parser
 
 import tqdm
+from tool.metric.confusion_matrix import confusematrix
 
 best_prec1 = 0
 
@@ -22,16 +23,17 @@ def main():
     # Phase
     dictCategories = {'phase': [ '7', '8', '9', '10']}
     dictCategories = {'phase': ['0', '1', '2', '3','4','5','6']}
+    # dictCategories = {'phase': [ '1', '2', '3', '4', '5' ]}
     rule = 'phase'
 
     dirImage   = '/home/withai/Pictures/LCFrame/append_video-8fps'
     pathJson   = '/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_test_checked.json'
-    recordJson = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_test_result.json"
+    recordJson = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_test_6phase_limit_bg_num_result.json"
 
     categories = dictCategories[rule]
     num_class  = len(categories)
     # args.resume = f"/home/withai/wangyx/checkPoint/TRN/{rule}.pth.tar"
-    args.resume = '/home/withai/Desktop/LCLabelFiles/TRN_6phase_222_2anitator_best.pth.tar'
+    args.resume = '/home/withai/Desktop/LCLabelFiles/TRN_6phase_limit_bg_num.pth.tar'
 
     args.store_name = '_'.join(
         ['TRN', args.dataset, args.modality, args.arch, args.consensus_type, 'segment%d' % args.num_segments])
@@ -150,7 +152,9 @@ def validate(val_loader, model, criterion, recordJson):
     results = torch.cat(calResult, 0).cpu().detach()
     conf = torch.cat(calConf, 0).cpu().detach()
     tp = (labels == results).long()
-    getConfusionMatrix(tp.numpy(), labels.numpy(), results.numpy(), conf.numpy())
+    # getConfusionMatrix(tp.numpy(), labels.numpy(), results.numpy(), conf.numpy())
+
+    confusematrix(recordJson)
 
     return top1.avg
 

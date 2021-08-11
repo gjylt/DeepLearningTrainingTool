@@ -465,9 +465,11 @@ def statistic_parkland1():
     print("end")
 
 
+from tool.LCDataProcess.LCJson2TRN import find_exist_not_exist
+
 def extract_video_frame_according_label():
     videopaths    = []
-    savedir       = "/home/withai/Pictures/LCFrame/new_append"
+    savedir       = "/home/withai/Pictures/LCFrame/picture_for_parkland"
     train_val_txt = "/home/withai/Desktop/LCLabelFiles/train_val_new.txt"
     with open(train_val_txt) as f:
         train_val_videos = f.readlines()
@@ -515,6 +517,28 @@ def extract_video_frame_according_label():
                 break
         if not find:
             not_find_list2.append(videoname)
+
+
+
+
+    #######################################################
+    train_val_list = test_list_g
+
+    path1      = "/home/withai/Pictures/LCFrame/100-1-2-8fps"
+    find_dict1, not_find_list1= find_exist_not_exist(path1, train_val_list)
+
+    path2      = "/home/withai/Pictures/LCFrame/append_video-8fps"
+    find_dict2, not_find_list4 = find_exist_not_exist(path2, not_find_list1)
+
+    path3      = "/home/withai/Pictures/LCFrame/100-3-8fps"
+    find_dict3, not_find_list3 = find_exist_not_exist(path3, not_find_list4)
+
+    append_new = "/home/withai/Pictures/LCFrame/new_append"
+    find_dict4, not_find_list2 = find_exist_not_exist(append_new, not_find_list3)
+
+
+
+    #######################################################
 
 
     videoinfo = "/home/withai/Desktop/LCLabelFiles/videopth_info.json"
@@ -572,7 +596,7 @@ def extract_video_frame_according_label():
 
 if __name__ == "__main__":
 
-    extract_video_frame_according_label()
+    # extract_video_frame_according_label()
 
     # statistic_parkland()
     # genearate_parkland_train_label()
