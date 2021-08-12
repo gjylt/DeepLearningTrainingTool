@@ -28,12 +28,12 @@ def main():
 
     dirImage   = '/home/withai/Pictures/LCFrame/append_video-8fps'
     pathJson   = '/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_test_checked.json'
-    recordJson = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_test_6phase_limit_bg_num_result.json"
+    recordJson = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_6phaseBgNoMoreThanTarget_result.json"
 
     categories = dictCategories[rule]
     num_class  = len(categories)
     # args.resume = f"/home/withai/wangyx/checkPoint/TRN/{rule}.pth.tar"
-    args.resume = '/home/withai/Desktop/LCLabelFiles/TRN_6phase_limit_bg_num.pth.tar'
+    args.resume = '/home/withai/Desktop/LCLabelFiles/TRN_something_RGB_BNInception_TRNmultiscale_segment8_6phaseBgNoMoreThanTarget_best.pth.tar'
 
     args.store_name = '_'.join(
         ['TRN', args.dataset, args.modality, args.arch, args.consensus_type, 'segment%d' % args.num_segments])

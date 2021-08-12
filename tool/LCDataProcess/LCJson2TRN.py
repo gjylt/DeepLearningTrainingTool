@@ -588,8 +588,8 @@ def get_json_label(extract_fps, pth1,pth2, videoinfopth, videolist):
                 if labelname not in lablenames:
                     lablenames.append(labelname)
 
-                labelid = lable_dict[labelname]
-                # labelid = label['id']
+                # labelid = lable_dict[labelname]
+                labelid = label['id']
                 start   = min(math.floor(label["start"]*extract_fps),duration)
                 end     = min(math.floor(label["end"]*extract_fps), duration )
 
@@ -1176,11 +1176,145 @@ def statistic_Trn_dataset():
 
 
 
+itru_list = [
+"trocar",
+"atraumatic forceps",
+"cautery hook",
+"clip applier",
+"absorbable clip",
+"metal clip",
+"maryland dissecting forceps",
+"gauze",
+"straight dissecting forceps",
+"scissor",
+"claw grasper",
+"dissecting forceps",
+"specimen bag",
+"puncture needle",
+"aspirator",
+"coagulator",
+"drainage tube",
+"atraumatic fixation forceps"
+]
+
+def Compare_Instrument_with_SpecialPhase():
+
+    extrcat_fps  = 1
+    pth1         = "/home/withai/Desktop/LCLabelFiles/phase_specialevents/special_events/35"
+    pth2         = "/home/withai/Desktop/LCLabelFiles/phase_specialevents/special_events/36"
+    videoinfopth = "/home/withai/Desktop/LCLabelFiles/videopth_info.json"
+
+    parkland_path = "/mnt/FileExchange/withai/project/LC阶段识别/8月LC/videolist_8_3_wsd.xlsx"
+    train_list    = [pth[0] for pth in read_xls_rows(parkland_path) ]
+    valid_list    = [pth[0] for pth in read_xls_rows(parkland_path,1) ]
+    test_list     = [pth[0] for pth in read_xls_rows(parkland_path, 2)]
+    # train_list    = train_list_g
+    # valid_list    = valid_list_g
+    # test_list     = test_list_g
+    videolist     = train_list + valid_list + test_list
+
+    #get lc label
+    label_name_dict = get_json_label(extrcat_fps, pth1, pth2, videoinfopth, videolist)
+
+    instrument_test_dir = "/mnt/FileExchange/withai/project/LC阶段识别/1000video_InstrumentResult"
+    filelist            = os.listdir(instrument_test_dir)
+    clip_applier_id = 3
+    scissor_id      = 9
+    dict_total = {}
+    for file in filelist:
+        path = os.path.join( instrument_test_dir, file)
+        with open(path) as f:
+            instrudata = json.load(f)
+            dict_total.update(instrudata)
+
+    new_video_label_dict = {}
+    not_find_list = []
+    for videoname in label_name_dict.keys():
+
+        resident_id = videoname.split("-")[0]
+        find = False
+        for videoname1 in dict_total.keys():
+            if videoname1.__contains__(resident_id):
+
+                phaselist  = label_name_dict[videoname]
+                phase_len  = len(phaselist)
+                instrulist_dict = dict_total[videoname1]
+                instrulen  = len( instrulist_dict.keys())
+                min_len    = min( phase_len, instrulen )
+
+                instrulist_new = []
+                phaselist_new  = []
+
+                pre_find_stru  = False
+                pre_find_phase = False
+                stru_continue  = False
+                phase_continue = False
+
+                for idx in range( min_len ):
+
+                    predinstrus   = instrulist_dict[str(idx)]
+                    find_stru     = False
+                    find_clip     = False
+                    find_sccisor  = False
+                    if clip_applier_id in predinstrus:
+                        find_clip = True
+                    if scissor_id in predinstrus:
+                        find_sccisor = True
+
+                    if find_clip or find_sccisor:
+                        find_stru = True
+
+                    phaseid       = phaselist[idx]
+                    find_phase    = False
+                    if phaseid > 0:
+                        find_phase = True
+
+                    stru_changed  = False
+                    if find_stru != pre_find_stru:
+                        stru_changed  = True
+                        stru_continue = not stru_continue
+
+                    phase_changed  = False
+                    if find_phase != pre_find_phase:
+                        phase_changed  = True
+                        phase_continue = not phase_continue
+
+                    if find_stru or find_phase:
+                        if find_clip:
+                            instrulist_new.append( clip_applier_id )
+                        elif find_sccisor:
+                            instrulist_new.append( scissor_id )
+                        else:
+                            instrulist_new.append(0)
+
+                        phaselist_new.append( phaseid )
+                    else:
+                        if stru_changed or phase_changed:
+                            phaselist_new  += [0]*5
+                            instrulist_new += [0]*5
+
+
+                new_video_label_dict[videoname1] = {
+                    "phase": phaselist_new,
+                    "instru":instrulist_new
+                }
+                find = True
+                del dict_total[videoname1]
+                break
+
+        if not find:
+            not_find_list.append(videoname)
+
+
+
+    print("not find", not_find_list)
+
 
 if __name__ == "__main__":
 
+    Compare_Instrument_with_SpecialPhase()
 
-    statistic_Trn_dataset()
+    # statistic_Trn_dataset()
 
     # check_video_exist()
 
