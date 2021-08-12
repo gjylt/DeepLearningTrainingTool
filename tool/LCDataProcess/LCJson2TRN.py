@@ -1163,7 +1163,7 @@ def genearate_parkland_train_label():
 
 def statistic_Trn_dataset():
 
-    path = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_checked.json"
+    path = "/Users/guan/Desktop/parkland_train_val_test.json"
     with open(path) as f:
         data = json.load(f)
 

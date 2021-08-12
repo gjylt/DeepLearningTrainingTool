@@ -93,11 +93,10 @@ def compute_ap(recall, precision):
 import json
 def confusematrix(pth):
 
-<<<<<<< HEAD
     # pth = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_test_result.json"
-=======
+
     pth = "/Users/guan/Desktop/LCPhase_222_len24_2_annotator_test_6phase_limit_bg_num_result.json"
->>>>>>> 0dece19... test
+
     with open(pth,'r') as f:
         data = json.load(f)
 
@@ -385,23 +384,40 @@ from tool.plot_figure import visualizationArray
 
 def visualize_result():
 
-    pth = "/home/withai/Desktop/LCLabelFiles/LCPhase_parkland_pure_test.json"
+    pth = "/Users/guan/Desktop/LCPhase_parkland_pure_test.json"
     with open(pth,'r') as f:
         data = json.load(f)
 
+    arraylist_dict = {}
     for name in data.keys():
         videoname = name.split("/")[0]
         sequnce = data[name]
         id      = int( name.split("_")[-1])
         pred    = sequnce[0]
         label   = sequnce[1]
+        if videoname not in arraylist_dict.keys():
+            arraylist_dict[videoname] = {}
+        arraylist_dict[videoname][id] = [label, pred]
 
-    arraylist = []
-    videoname = ""
-    savedir   = ""
-    namlist   = []
+    savedir = "/Users/guan/Desktop/visualize"
+    namlist = ["pred","label"]
 
-    visualizationArray( arraylist, videoname, savedir, namlist )
+    for videoname in arraylist_dict.keys():
+
+        listdata = arraylist_dict[videoname]
+
+        predlist = []
+        labelist = []
+        idxlist  = []
+        for i in sorted(listdata):
+            pred  = listdata[i][1]
+            label = listdata[i][0]
+            predlist.append(pred-label)
+            labelist.append(label)
+            idxlist.append(i)
+
+        arraylist = [predlist]
+        visualizationArray( arraylist, videoname, savedir, namlist )
 
 if __name__ =="__main__":
 
@@ -410,18 +426,18 @@ if __name__ =="__main__":
     #     data = json.load(f)
 
     # compute_postprocess()
-<<<<<<< HEAD
-    path = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_test_6phase_limit_bg_num_result.json"
+
+    # path = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_test_6phase_limit_bg_num_result.json"
     # confusematrix( path )
 
     # extracted_test_result_sequnce()
 
     visualize_result()
-=======
-    confusematrix()
+
+    # confusematrix()
 
     # extracted_test_result_sequnce()
->>>>>>> 0dece19... test
+
 
     print("")
 
