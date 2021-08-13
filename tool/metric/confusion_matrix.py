@@ -95,7 +95,7 @@ def confusematrix(pth):
 
     # pth = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_test_result.json"
 
-    pth = "/Users/guan/Desktop/LCPhase_222_len24_2_annotator_test_6phase_limit_bg_num_result.json"
+    # pth = "/Users/guan/Desktop/LCPhase_222_len24_2_annotator_test_6phase_limit_bg_num_result.json"
 
     with open(pth,'r') as f:
         data = json.load(f)
@@ -427,12 +427,12 @@ if __name__ =="__main__":
 
     # compute_postprocess()
 
-    # path = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_test_6phase_limit_bg_num_result.json"
-    # confusematrix( path )
+    path = "/home/withai/Desktop/LCLabelFiles/LCPhase_222_len24_2_annotator_6phaseBgNoMoreThanTarget_result.json"
+    confusematrix( path )
 
     # extracted_test_result_sequnce()
 
-    visualize_result()
+    # visualize_result()
 
     # confusematrix()
 

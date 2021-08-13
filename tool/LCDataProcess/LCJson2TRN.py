@@ -1197,6 +1197,17 @@ itru_list = [
 "atraumatic fixation forceps"
 ]
 
+def temp_video_list():
+    path = "/home/withai/Desktop/proj/python_proj/pyyolov4/resultTest_temp.json"
+    with open(path) as f:
+        data = json.load(f)
+
+    test_result = data["20201113-LC-HX-0001868588_ORIGIN.mp4"]
+
+
+    print("")
+
+
 def Compare_Instrument_with_SpecialPhase():
 
     extrcat_fps  = 1
@@ -1310,7 +1321,28 @@ def Compare_Instrument_with_SpecialPhase():
     print("not find", not_find_list)
 
 
+def statistic_gallblader_detect_result():
+    dirpath   = "../../data/picture_for_parkland_json"
+    videolist = os.listdir( dirpath )
+    
+    for video in videolist:
+        subdir   = os.path.join(dirpath,video)
+        filelist = os.listdir( subdir )
+
+
+        for filename in filelist:
+            path = os.path.join(subdir,filename)
+            with open(path) as f:
+                datalist = f.readlines()
+
+
+
+
+
+
+
 if __name__ == "__main__":
+    temp_video_list()
 
     Compare_Instrument_with_SpecialPhase()
 

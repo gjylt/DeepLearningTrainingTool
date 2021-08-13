@@ -602,7 +602,7 @@ if __name__ == "__main__":
     # genearate_parkland_train_label()
     # extracted_parkland_picture()
 
-    # extracted_append_video()
+    extracted_append_video()
     # savedir = "/home/withai/Desktop/"
     # get_video_info(savedir)
 
